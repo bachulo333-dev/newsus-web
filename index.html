@@ -195,6 +195,8 @@
     <div id="article-view" class="container hidden">
       <h1 id="article-title" class="article-title"></h1>
       <div id="article-meta" class="article-meta"></div>
+      <!-- Khu vực hiển thị ảnh thumbnail bên trong bài viết -->
+      <img id="article-thumb" style="width:100%; max-height:450px; object-fit:cover; border-radius:8px; margin-bottom:25px; display:none;">
       <div id="article-content" class="article-content"></div>
     </div>
 
@@ -238,7 +240,7 @@
         document.getElementById("article-view").classList.add("hidden");
         document.getElementById("home-view").classList.remove("hidden");
         window.scrollTo(0, 0);
-        // Khi về trang chủ, loadTẤT CẢ bài viết
+        // Khi về trang chủ, load TẤT CẢ bài viết
         loadPostList('ALL');
       }
 
@@ -253,6 +255,16 @@
           document.getElementById("article-title").innerText = article.title;
           document.getElementById("article-meta").innerText =
             article.author + " · " + article.date + " · Chuyên mục: " + article.category;
+          
+          // Xử lý hiện ảnh thumbnail bên trong bài đọc
+          const thumbEl = document.getElementById("article-thumb");
+          if (article.thumb) {
+            thumbEl.src = article.thumb;
+            thumbEl.style.display = "block";
+          } else {
+            thumbEl.style.display = "none";
+          }
+
           document.getElementById("article-content").innerHTML = article.content; 
         } else {
           document.getElementById("article-content").innerHTML =
@@ -305,7 +317,7 @@
 
           const rows = parseCSV(text).slice(1);
 
-          // Cập nhật lấy thêm cột thứ 7 (index 6) làm Category
+          // Cập nhật lấy thêm cột H (index 7) làm ảnh đại diện
           allPosts = rows
             .filter((row) => row.length >= 6)
             .map((row) => ({
@@ -315,7 +327,8 @@
               date: row[3],
               excerpt: row[4],
               content: row[5],
-              category: (row[6] || "MARKETING").trim().toUpperCase() // Lấy cột G, nếu trống thì mặc định là MARKETING
+              category: (row[6] || "MARKETING").trim().toUpperCase(), 
+              thumb: (row[7] || "").trim() // Cột ảnh đại diện
             }));
 
           // Đổi Tiêu đề chuyên mục trên web
@@ -345,10 +358,14 @@
           }
 
           postsToDisplay.forEach((item) => {
+            // Nếu có ảnh ở cột H thì tạo thẻ img, không thì bỏ trống
+            const imgTag = item.thumb ? `<img src="${item.thumb}" style="width:100%; max-height:350px; object-fit:cover; border-radius:8px; margin-bottom:15px; cursor:pointer;" onclick="readArticle('${item.id}')">` : "";
+
             container.innerHTML += `
               <article class="post">
+                ${imgTag}
                 <h2 class="post-title" onclick="readArticle('${item.id}')">${item.title}</h2>
-                <div class="post-meta">${item.author} · ${item.date} · Tương tác: ${item.category}</div>
+                <div class="post-meta">${item.author} · ${item.date} · Chuyên mục: ${item.category}</div>
                 <div class="post-excerpt">${item.excerpt}</div>
                 <a class="continue-reading" onclick="readArticle('${item.id}')">Continue reading ${item.title}...</a>
               </article>
