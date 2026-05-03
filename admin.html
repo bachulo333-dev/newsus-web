@@ -42,11 +42,11 @@
             btn.innerText = "Đang tải ảnh lên...";
 
             try {
-                // 1. Tải ảnh lên Storage - Đã sửa thành IMAGES (viết hoa) theo ảnh bạn gửi
+                // 1. Tải ảnh lên Storage - Đã sửa thành IMAGE (viết hoa) theo ảnh bạn gửi
                 const fileName = Date.now() + "_" + file.name;
                 const { data: uploadData, error: uploadError } = await supabaseClient
                     .storage
-                    .from('IMAGES') 
+                    .from('IMAGE') 
                     .upload(fileName, file);
 
                 if (uploadError) throw uploadError;
@@ -54,7 +54,7 @@
                 // 2. Lấy link ảnh Public
                 const { data: { publicUrl } } = supabaseClient
                     .storage
-                    .from('IMAGES')
+                    .from('IMAGE')
                     .getPublicUrl(fileName);
 
                 // 3. Lưu thông tin vào bảng Post
