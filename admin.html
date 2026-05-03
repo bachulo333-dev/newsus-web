@@ -1,31 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Đăng bài</title>
+    <title>Admin - Đăng bài chuyên nghiệp</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; }
-        input, textarea { width: 100%; margin-bottom: 10px; padding: 10px; display: block; }
-        button { width: 100%; padding: 15px; background: #24b47e; color: white; border: none; cursor: pointer; font-weight: bold; }
+        body { font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 30px auto; padding: 20px; background: #f0f2f5; }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input, textarea, button { width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
+        button { background: #24b47e; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button:disabled { background: #ccc; }
+        label { font-weight: bold; display: block; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <h2>ĐĂNG BÀI MỚI</h2>
-    <input type="text" id="t" placeholder="Tiêu đề">
-    <textarea id="c" rows="10" placeholder="Nội dung bài viết..."></textarea>
-    <input type="text" id="img" placeholder="Link ảnh">
-    <button onclick="post()">XUẤT BẢN</button>
+    <div class="card">
+        <h2>VIẾT BÀI MỚI</h2>
+        <input type="text" id="title" placeholder="Tiêu đề bài viết">
+        <textarea id="content" rows="10" placeholder="Nội dung bài viết..."></textarea>
+        
+        <label>Chọn ảnh đại diện:</label>
+        <input type="file" id="fileInput" accept="image/*">
+        
+        <button id="submitBtn" onclick="handlePublish()">XUẤT BẢN NGAY</button>
+    </div>
 
     <script>
-        const client = supabase.createClient("https://rcetkkjqllurishhgzfc.supabase.co", "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m");
+        const SB_URL = "https://rcetkkjqllurishhgzfc.supabase.co";
+        const SB_KEY = "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m";
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        async function post() {
-            const { error } = await client.from('post').insert([
-                { title: document.getElementById('t').value, content: document.getElementById('c').value, image_url: document.getElementById('img').value, author: 'Duy Bach' }
-            ]);
-            if (error) alert("Lỗi: " + error.message);
-            else { alert("Thành công!"); location.reload(); }
+        async function handlePublish() {
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const file = document.getElementById('fileInput').files[0];
+            const btn = document.getElementById('submitBtn');
+
+            if (!title || !content || !file) return alert("Bách ơi, điền đủ Title, Content và chọn Ảnh nhé!");
+
+            btn.disabled = true;
+            btn.innerText = "Đang tải ảnh lên...";
+
+            try {
+                // 1. Tải ảnh lên Storage
+                const fileName = Date.now() + "_" + file.name;
+                const { data: uploadData, error: uploadError } = await supabaseClient
+                    .storage
+                    .from('images')
+                    .upload(fileName, file);
+
+                if (uploadError) throw uploadError;
+
+                // 2. Lấy link ảnh Public
+                const { data: { publicUrl } } = supabaseClient
+                    .storage
+                    .from('images')
+                    .getPublicUrl(fileName);
+
+                // 3. Lưu thông tin vào bảng Post
+                btn.innerText = "Đang lưu bài viết...";
+                const { error: insertError } = await supabaseClient
+                    .from('post')
+                    .insert([{ 
+                        title, 
+                        content, 
+                        image_url: publicUrl, 
+                        author: 'Lê Duy Bách',
+                        category: 'TECH'
+                    }]);
+
+                if (insertError) throw insertError;
+
+                alert("Đăng bài thành công rực rỡ!");
+                location.reload();
+
+            } catch (err) {
+                alert("Lỗi: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "XUẤT BẢN NGAY";
+            }
         }
     </script>
 </body>
