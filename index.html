@@ -268,7 +268,8 @@
             thumbEl.style.display = "none";
           }
 
-          document.getElementById("article-content").innerHTML = article.content; 
+          // ĐÃ SỬA: Tự động chuyển dấu Enter thành thẻ xuống dòng <br>
+          document.getElementById("article-content").innerHTML = article.content.replace(/\n/g, '<br>'); 
         } else {
           document.getElementById("article-content").innerHTML = "<p>Không tìm thấy bài viết.</p>";
         }
