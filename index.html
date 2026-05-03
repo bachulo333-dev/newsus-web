@@ -234,7 +234,7 @@
 
     <!-- CHỨC NĂNG ĐIỀU HƯỚNG BẰNG JAVASCRIPT & SUPABASE -->
     <script>
-      // 1. Cấu hình Supabase (Đã dán Key của bạn)
+      // 1. Cấu hình Supabase
       const SB_URL = "https://rcetkkjqllurishhgzfc.supabase.co";
       const SB_KEY = "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m";
       const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -253,7 +253,6 @@
         document.getElementById("article-view").classList.remove("hidden");
         window.scrollTo(0, 0);
 
-        // Tìm bài viết theo ID (chuyển sang kiểu số vì id Supabase là int8)
         const article = allPosts.find((post) => post.id == id);
 
         if (article) {
@@ -275,8 +274,8 @@
         }
       }
 
-      // Hàm tạo đoạn trích dẫn (xóa code HTML để không bị lỗi layout)
       function extractTextFromHTML(html) {
+          if (!html) return "";
           const tempDiv = document.createElement("div");
           tempDiv.innerHTML = html;
           const text = tempDiv.textContent || tempDiv.innerText || "";
@@ -286,34 +285,28 @@
       // 2. Load dữ liệu từ Supabase
       async function loadPostList(categoryFilter = 'ALL') {
         try {
-          // Lấy dữ liệu từ bảng 'post' và sắp xếp mới nhất lên đầu (theo id)
           const { data: rows, error } = await supabaseClient
               .from('post')
-              .select('*')
-              .order('id', { ascending: false });
+              .select('*');
 
           if (error) throw error;
 
-          // Xử lý dữ liệu Supabase cho khớp với định dạng web cũ
-          allPosts = rows.map((row) => {
-            // Chỉnh lại format ngày tháng cho đẹp
-            let dateStr = "Mới đây";
-            if(row.created_at) {
-                const d = new Date(row.created_at);
-                dateStr = d.toLocaleDateString('vi-VN');
-            }
-
+          // Tạo ID ảo dựa trên số thứ tự (index)
+          allPosts = rows.map((row, index) => {
             return {
-              id: row.id,
-              title: row.title,
+              id: index, 
+              title: row.title || "Bài viết không tên",
               author: row.author || "Lê Duy Bách",
-              date: dateStr,
-              excerpt: extractTextFromHTML(row.content), // Tự tạo excerpt từ nội dung
-              content: row.content,
+              date: "Mới đây", 
+              excerpt: extractTextFromHTML(row.content),
+              content: row.content || "",
               category: (row.category || "TECH").toUpperCase(), 
               thumb: row.image_url || ""
             };
           });
+
+          // Đảo ngược mảng để bài vừa đăng lên đầu
+          allPosts.reverse();
 
           // Đổi Tiêu đề chuyên mục trên web
           if (categoryFilter === 'ALL') {
@@ -322,7 +315,6 @@
               document.getElementById("main-category-title").innerText = categoryFilter;
           }
 
-          // Chuyển màn hình về trang danh sách và cuộn lên đầu
           document.getElementById("article-view").classList.add("hidden");
           document.getElementById("home-view").classList.remove("hidden");
           window.scrollTo(0, 0);
@@ -330,7 +322,6 @@
           const container = document.getElementById("post-list-container");
           container.innerHTML = "";
 
-          // Lọc bài viết theo category
           let postsToDisplay = allPosts;
           if (categoryFilter !== 'ALL') {
               postsToDisplay = allPosts.filter(post => post.category === categoryFilter);
@@ -361,7 +352,6 @@
         }
       }
 
-      // Chạy lần đầu tiên khi mở web
       loadPostList('ALL');
     </script>
   </body>
