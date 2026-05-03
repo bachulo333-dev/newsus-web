@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Đăng bài</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; }
+        input, textarea { width: 100%; margin-bottom: 10px; padding: 10px; display: block; }
+        button { width: 100%; padding: 15px; background: #24b47e; color: white; border: none; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>ĐĂNG BÀI MỚI</h2>
+    <input type="text" id="t" placeholder="Tiêu đề">
+    <textarea id="c" rows="10" placeholder="Nội dung bài viết..."></textarea>
+    <input type="text" id="img" placeholder="Link ảnh">
+    <button onclick="post()">XUẤT BẢN</button>
+
+    <script>
+        const client = supabase.createClient("https://rcetkkjqllurishhgzfc.supabase.co", "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m");
+
+        async function post() {
+            const { error } = await client.from('post').insert([
+                { title: document.getElementById('t').value, content: document.getElementById('c').value, image_url: document.getElementById('img').value, author: 'Duy Bach' }
+            ]);
+            if (error) alert("Lỗi: " + error.message);
+            else { alert("Thành công!"); location.reload(); }
+        }
+    </script>
+</body>
+</html>
