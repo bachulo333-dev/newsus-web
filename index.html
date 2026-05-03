@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NEWS - Tin tức tổng hợp</title>
+    <!-- THÊM THƯ VIỆN SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       /* === GIAO DIỆN CƠ BẢN === */
       body {
@@ -187,7 +189,7 @@
     <div id="home-view" class="container">
       <h1 id="main-category-title" class="category-title">LATEST NEWS</h1>
       <div id="post-list-container">
-        <p>Đang tải dữ liệu từ máy chủ...</p>
+        <p>Đang tải dữ liệu siêu tốc từ máy chủ...</p>
       </div>
     </div>
 
@@ -195,7 +197,6 @@
     <div id="article-view" class="container hidden">
       <h1 id="article-title" class="article-title"></h1>
       <div id="article-meta" class="article-meta"></div>
-      <!-- Khu vực hiển thị ảnh thumbnail bên trong bài viết -->
       <img id="article-thumb" style="width:100%; max-height:450px; object-fit:cover; border-radius:8px; margin-bottom:25px; display:none;">
       <div id="article-content" class="article-content"></div>
     </div>
@@ -231,16 +232,19 @@
       <div class="copyright">© 2026 freenewsus.com – All Rights Reserved.</div>
     </footer>
 
-    <!-- CHỨC NĂNG ĐIỀU HƯỚNG BẰNG JAVASCRIPT -->
+    <!-- CHỨC NĂNG ĐIỀU HƯỚNG BẰNG JAVASCRIPT & SUPABASE -->
     <script>
-      // Lưu toàn bộ dữ liệu bài viết
+      // 1. Cấu hình Supabase (Đã dán Key của bạn)
+      const SB_URL = "https://rcetkkjqllurishhgzfc.supabase.co";
+      const SB_KEY = "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m";
+      const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
       let allPosts = [];
 
       function goHome() {
         document.getElementById("article-view").classList.add("hidden");
         document.getElementById("home-view").classList.remove("hidden");
         window.scrollTo(0, 0);
-        // Khi về trang chủ, load TẤT CẢ bài viết
         loadPostList('ALL');
       }
 
@@ -249,14 +253,14 @@
         document.getElementById("article-view").classList.remove("hidden");
         window.scrollTo(0, 0);
 
-        const article = allPosts.find((post) => post.id === id);
+        // Tìm bài viết theo ID (chuyển sang kiểu số vì id Supabase là int8)
+        const article = allPosts.find((post) => post.id == id);
 
         if (article) {
           document.getElementById("article-title").innerText = article.title;
           document.getElementById("article-meta").innerText =
             article.author + " · " + article.date + " · Chuyên mục: " + article.category;
           
-          // Xử lý hiện ảnh thumbnail bên trong bài đọc
           const thumbEl = document.getElementById("article-thumb");
           if (article.thumb) {
             thumbEl.src = article.thumb;
@@ -267,69 +271,49 @@
 
           document.getElementById("article-content").innerHTML = article.content; 
         } else {
-          document.getElementById("article-content").innerHTML =
-            "<p>Không tìm thấy bài viết.</p>";
+          document.getElementById("article-content").innerHTML = "<p>Không tìm thấy bài viết.</p>";
         }
       }
 
-      function parseCSV(text) {
-        const rows = [];
-        let currentRow = [];
-        let currentCell = "";
-        let insideQuotes = false;
-
-        for (let i = 0; i < text.length; i++) {
-          const char = text[i];
-          const nextChar = text[i + 1];
-
-          if (char === '"' && insideQuotes && nextChar === '"') {
-            currentCell += '"';
-            i++;
-          } else if (char === '"') {
-            insideQuotes = !insideQuotes;
-          } else if (char === "," && !insideQuotes) {
-            currentRow.push(currentCell.trim());
-            currentCell = "";
-          } else if (char === "\n" && !insideQuotes) {
-            currentRow.push(currentCell.trim());
-            rows.push(currentRow);
-            currentRow = [];
-            currentCell = "";
-          } else {
-            currentCell += char;
-          }
-        }
-        if (currentCell || currentRow.length > 0) {
-          currentRow.push(currentCell.trim());
-          rows.push(currentRow);
-        }
-        return rows;
+      // Hàm tạo đoạn trích dẫn (xóa code HTML để không bị lỗi layout)
+      function extractTextFromHTML(html) {
+          const tempDiv = document.createElement("div");
+          tempDiv.innerHTML = html;
+          const text = tempDiv.textContent || tempDiv.innerText || "";
+          return text.length > 200 ? text.substring(0, 200) + "..." : text;
       }
 
-      // Thêm tham số categoryFilter (mặc định là ALL để hiện tất cả)
+      // 2. Load dữ liệu từ Supabase
       async function loadPostList(categoryFilter = 'ALL') {
-        const sheetUrl =
-          "https://docs.google.com/spreadsheets/d/e/2PACX-1vSkMx-BLauuSxxfpCeCgqQOWqPPGBI7MluGdwyzW-LVF3nCmUJsDgM6FYNYKT7-v4l67zUjgyl0i4V8/pub?output=csv";
-
         try {
-          const res = await fetch(sheetUrl);
-          const text = await res.text();
+          // Lấy dữ liệu từ bảng 'post' và sắp xếp mới nhất lên đầu (theo id)
+          const { data: rows, error } = await supabaseClient
+              .from('post')
+              .select('*')
+              .order('id', { ascending: false });
 
-          const rows = parseCSV(text).slice(1);
+          if (error) throw error;
 
-          // Cập nhật lấy thêm cột H (index 7) làm ảnh đại diện
-          allPosts = rows
-            .filter((row) => row.length >= 6)
-            .map((row) => ({
-              id: row[0],
-              title: row[1],
-              author: row[2],
-              date: row[3],
-              excerpt: row[4],
-              content: row[5],
-              category: (row[6] || "MARKETING").trim().toUpperCase(), 
-              thumb: (row[7] || "").trim() // Cột ảnh đại diện
-            }));
+          // Xử lý dữ liệu Supabase cho khớp với định dạng web cũ
+          allPosts = rows.map((row) => {
+            // Chỉnh lại format ngày tháng cho đẹp
+            let dateStr = "Mới đây";
+            if(row.created_at) {
+                const d = new Date(row.created_at);
+                dateStr = d.toLocaleDateString('vi-VN');
+            }
+
+            return {
+              id: row.id,
+              title: row.title,
+              author: row.author || "Lê Duy Bách",
+              date: dateStr,
+              excerpt: extractTextFromHTML(row.content), // Tự tạo excerpt từ nội dung
+              content: row.content,
+              category: (row.category || "TECH").toUpperCase(), 
+              thumb: row.image_url || ""
+            };
+          });
 
           // Đổi Tiêu đề chuyên mục trên web
           if (categoryFilter === 'ALL') {
@@ -358,7 +342,6 @@
           }
 
           postsToDisplay.forEach((item) => {
-            // Nếu có ảnh ở cột H thì tạo thẻ img, không thì bỏ trống
             const imgTag = item.thumb ? `<img src="${item.thumb}" style="width:100%; max-height:350px; object-fit:cover; border-radius:8px; margin-bottom:15px; cursor:pointer;" onclick="readArticle('${item.id}')">` : "";
 
             container.innerHTML += `
@@ -374,11 +357,11 @@
         } catch (err) {
           console.log("Lỗi tải trang: ", err);
           document.getElementById("post-list-container").innerHTML =
-            "<p>Vui lòng thêm đường link CSV vào code.</p>";
+            "<p>Hệ thống đang bảo trì, vui lòng quay lại sau.</p>";
         }
       }
 
-      // Chạy lần đầu tiên khi mở web, hiện TẤT CẢ bài viết
+      // Chạy lần đầu tiên khi mở web
       loadPostList('ALL');
     </script>
   </body>
