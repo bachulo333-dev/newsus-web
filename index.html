@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NEWS - Tin tức tổng hợp</title>
+
+    <!-- GOOGLE ANALYTICS 4 (Mã theo dõi lượt truy cập) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0FR9WGXCTX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-0FR9WGXCTX');
+    </script>
+
     <!-- THÊM THƯ VIỆN SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -268,7 +279,7 @@
             thumbEl.style.display = "none";
           }
 
-          // ĐÃ SỬA: Tự động chuyển dấu Enter thành thẻ xuống dòng <br>
+          // Tự động chuyển dấu Enter thành thẻ xuống dòng <br>
           document.getElementById("article-content").innerHTML = article.content.replace(/\n/g, '<br>'); 
         } else {
           document.getElementById("article-content").innerHTML = "<p>Không tìm thấy bài viết.</p>";
