@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NEWS - Tin tức tổng hợp</title>
 
-    <!-- GOOGLE ANALYTICS 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-0FR9WGXCTX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -15,7 +14,6 @@
       gtag('config', 'G-0FR9WGXCTX');
     </script>
 
-    <!-- THÊM THƯ VIỆN SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       /* === GIAO DIỆN CƠ BẢN === */
@@ -180,7 +178,6 @@
     </style>
   </head>
   <body>
-    <!-- THANH MENU -->
     <header>
       <div class="logo" onclick="goHome()">NEWS</div>
       <nav>
@@ -195,7 +192,6 @@
       </nav>
     </header>
 
-    <!-- MÀN HÌNH 1: KHUNG DANH SÁCH BÀI VIẾT -->
     <div id="home-view" class="container">
       <h1 id="main-category-title" class="category-title">LATEST NEWS</h1>
       <div id="post-list-container">
@@ -203,7 +199,6 @@
       </div>
     </div>
 
-    <!-- MÀN HÌNH 2: KHUNG ĐỌC TRUYỆN CHI TIẾT -->
     <div id="article-view" class="container hidden">
       <h1 id="article-title" class="article-title"></h1>
       <div id="article-meta" class="article-meta"></div>
@@ -211,7 +206,6 @@
       <div id="article-content" class="article-content"></div>
     </div>
 
-    <!-- CHÂN TRANG ĐƯỢC CẬP NHẬT LẠI -->
     <footer>
       <div class="footer-grid">
         <div>
@@ -239,7 +233,6 @@
       <div class="copyright">© 2026 freenewsus.com – All Rights Reserved.</div>
     </footer>
 
-    <!-- CHỨC NĂNG ĐIỀU HƯỚNG BẰNG JAVASCRIPT & SUPABASE -->
     <script>
       // 1. Cấu hình Supabase
       const SB_URL = "https://rcetkkjqllurishhgzfc.supabase.co";
@@ -252,6 +245,11 @@
         document.getElementById("article-view").classList.add("hidden");
         document.getElementById("home-view").classList.remove("hidden");
         window.scrollTo(0, 0);
+        
+        // ĐÃ SỬA: Xóa ID trên thanh địa chỉ khi về trang chủ
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.pushState({path:cleanUrl},'',cleanUrl);
+        
         loadPostList('ALL');
       }
 
@@ -259,6 +257,10 @@
         document.getElementById("home-view").classList.add("hidden");
         document.getElementById("article-view").classList.remove("hidden");
         window.scrollTo(0, 0);
+
+        // ĐÃ SỬA: Cập nhật URL có chứa ID bài viết
+        const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
+        window.history.pushState({path:newurl},'',newurl);
 
         const article = allPosts.find((post) => post.id == id);
 
@@ -322,6 +324,10 @@
           } else {
               // Xóa dấu gạch dưới để hiển thị đẹp hơn (VD: TRUE_CRIME -> TRUE CRIME)
               document.getElementById("main-category-title").innerText = categoryFilter.replace('_', ' ');
+              
+              // Xóa ID trên thanh URL nếu người dùng bấm vào một chuyên mục
+              const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+              window.history.pushState({path:cleanUrl},'',cleanUrl);
           }
 
           document.getElementById("article-view").classList.add("hidden");
@@ -361,10 +367,23 @@
         }
       }
 
-      loadPostList('ALL');
+      // ĐÃ SỬA: Hàm khởi động ứng dụng để kiểm tra URL xem có chứa ID bài viết không
+      async function initApp() {
+          await loadPostList('ALL'); // Đợi tải xong toàn bộ danh sách bài viết
+          
+          // Lấy tham số ?id=... từ thanh địa chỉ
+          const urlParams = new URLSearchParams(window.location.search);
+          const postId = urlParams.get('id');
+          
+          if (postId !== null) {
+              readArticle(postId); // Nếu có ID, tự động mở thẳng bài viết đó
+          }
+      }
+
+      // Gọi hàm khởi động thay vì gọi trực tiếp loadPostList('ALL')
+      initApp();
     </script>
 
-    <!-- MÃ QUẢNG CÁO HILLTOPADS (POPUNDER) -->
     <script>
     (function(sjf){
     var d = document,
