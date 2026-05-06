@@ -20,15 +20,15 @@
         <input type="text" id="title" placeholder="Tiêu đề bài viết">
         <textarea id="content" rows="10" placeholder="Nội dung bài viết..."></textarea>
         
-        <!-- BẮT ĐẦU PHẦN THÊM MỚI: Ô chọn chuyên mục -->
+        <!-- ĐÃ ĐỒNG BỘ 5 CHUYÊN MỤC MỚI -->
         <label>Chọn chuyên mục:</label>
         <select id="category">
-            <option value="TECH">Công nghệ</option>
-            <option value="HISTORY">Lịch sử (Weird History)</option>
-            <option value="WORLD">Thế giới</option>
-            <option value="LIFE">Đời sống</option>
+            <option value="TRUE_CRIME">True Crime</option>
+            <option value="WEIRD_HISTORY">Weird History</option>
+            <option value="POP_CULTURE">Pop Culture</option>
+            <option value="WHAT_IF">What If</option>
+            <option value="PSYCHOLOGY">Psychology</option>
         </select>
-        <!-- KẾT THÚC PHẦN THÊM MỚI -->
 
         <label>Chọn ảnh đại diện:</label>
         <input type="file" id="fileInput" accept="image/*">
@@ -44,7 +44,7 @@
         async function handlePublish() {
             const title = document.getElementById('title').value;
             const content = document.getElementById('content').value;
-            // BẮT ĐẦU PHẦN THÊM MỚI: Lấy giá trị chuyên mục từ ô chọn
+            // Lấy giá trị chuyên mục từ ô chọn
             const categoryValue = document.getElementById('category').value;
             const file = document.getElementById('fileInput').files[0];
             const btn = document.getElementById('submitBtn');
@@ -79,7 +79,7 @@
                         content, 
                         image_url: publicUrl, 
                         author: 'Lê Duy Bách',
-                        // ĐÃ SỬA: Dùng biến categoryValue thay vì chữ 'TECH' cố định
+                        // Gửi biến categoryValue lên Supabase
                         category: categoryValue
                     }]);
 
