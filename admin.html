@@ -7,7 +7,8 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 30px auto; padding: 20px; background: #f0f2f5; }
         .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        input, textarea, button { width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
+        /* Thêm select vào phần CSS để ô chọn chuyên mục đẹp như các ô khác */
+        input, textarea, select, button { width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
         button { background: #24b47e; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
         button:disabled { background: #ccc; }
         label { font-weight: bold; display: block; margin-top: 15px; }
@@ -19,6 +20,16 @@
         <input type="text" id="title" placeholder="Tiêu đề bài viết">
         <textarea id="content" rows="10" placeholder="Nội dung bài viết..."></textarea>
         
+        <!-- BẮT ĐẦU PHẦN THÊM MỚI: Ô chọn chuyên mục -->
+        <label>Chọn chuyên mục:</label>
+        <select id="category">
+            <option value="TECH">Công nghệ</option>
+            <option value="HISTORY">Lịch sử (Weird History)</option>
+            <option value="WORLD">Thế giới</option>
+            <option value="LIFE">Đời sống</option>
+        </select>
+        <!-- KẾT THÚC PHẦN THÊM MỚI -->
+
         <label>Chọn ảnh đại diện:</label>
         <input type="file" id="fileInput" accept="image/*">
         
@@ -33,6 +44,8 @@
         async function handlePublish() {
             const title = document.getElementById('title').value;
             const content = document.getElementById('content').value;
+            // BẮT ĐẦU PHẦN THÊM MỚI: Lấy giá trị chuyên mục từ ô chọn
+            const categoryValue = document.getElementById('category').value;
             const file = document.getElementById('fileInput').files[0];
             const btn = document.getElementById('submitBtn');
 
@@ -42,7 +55,7 @@
             btn.innerText = "Đang tải ảnh lên...";
 
             try {
-                // 1. Tải ảnh lên Storage - Đã sửa chuẩn thành images (viết thường)
+                // 1. Tải ảnh lên Storage
                 const fileName = Date.now() + "_" + file.name;
                 const { data: uploadData, error: uploadError } = await supabaseClient
                     .storage
@@ -66,7 +79,8 @@
                         content, 
                         image_url: publicUrl, 
                         author: 'Lê Duy Bách',
-                        category: 'TECH'
+                        // ĐÃ SỬA: Dùng biến categoryValue thay vì chữ 'TECH' cố định
+                        category: categoryValue
                     }]);
 
                 if (insertError) throw insertError;
