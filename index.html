@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NEWS - Tin tức tổng hợp</title>
 
-    <!-- GOOGLE ANALYTICS 4 (Mã theo dõi lượt truy cập) -->
+    <!-- GOOGLE ANALYTICS 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-0FR9WGXCTX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -186,12 +186,11 @@
       <nav>
         <ul>
           <li><a onclick="goHome()">Home</a></li>
-          <li><a onclick="loadPostList('BLOGGING')">Blogging</a></li>
-          <li><a onclick="loadPostList('MARKETING')">Marketing</a></li>
-          <li><a onclick="loadPostList('SEO')">SEO</a></li>
-          <li><a onclick="loadPostList('SOCIAL MEDIA')">Social Media</a></li>
-          <li><a onclick="loadPostList('TECH')">Tech</a></li>
-          <li><a onclick="loadPostList('WEB DESIGN')">Web Design</a></li>
+          <li><a onclick="loadPostList('TRUE_CRIME')">True Crime</a></li>
+          <li><a onclick="loadPostList('WEIRD_HISTORY')">Weird History</a></li>
+          <li><a onclick="loadPostList('POP_CULTURE')">Pop Culture</a></li>
+          <li><a onclick="loadPostList('WHAT_IF')">What If</a></li>
+          <li><a onclick="loadPostList('PSYCHOLOGY')">Psychology</a></li>
         </ul>
       </nav>
     </header>
@@ -212,31 +211,28 @@
       <div id="article-content" class="article-content"></div>
     </div>
 
-    <!-- CHÂN TRANG -->
+    <!-- CHÂN TRANG ĐƯỢC CẬP NHẬT LẠI -->
     <footer>
       <div class="footer-grid">
         <div>
-          <h6>News</h6>
+          <h6>Mysteries</h6>
           <ul>
-            <li><a onclick="goHome()">Homepage</a></li>
-            <li><a onclick="loadPostList('U.S.')">U.S.</a></li>
-            <li><a onclick="loadPostList('WORLD')">World</a></li>
+            <li><a onclick="loadPostList('TRUE_CRIME')">True Crime</a></li>
+            <li><a onclick="loadPostList('WEIRD_HISTORY')">Weird History</a></li>
           </ul>
         </div>
         <div>
-          <h6>Lifestyle</h6>
+          <h6>Entertainment</h6>
           <ul>
-            <li><a onclick="loadPostList('HEALTH')">Health</a></li>
-            <li><a onclick="loadPostList('FOOD')">Food</a></li>
-            <li><a onclick="loadPostList('TRAVEL')">Travel</a></li>
+            <li><a onclick="loadPostList('POP_CULTURE')">Pop Culture</a></li>
           </ul>
         </div>
         <div>
-          <h6>Business</h6>
+          <h6>Discover</h6>
           <ul>
-            <li><a onclick="loadPostList('TECH')">Tech</a></li>
-            <li><a onclick="loadPostList('ECONOMY')">Economy</a></li>
-            <li><a onclick="loadPostList('STOCK MARKET')">Stock Market</a></li>
+            <li><a onclick="loadPostList('WHAT_IF')">What If</a></li>
+            <li><a onclick="loadPostList('PSYCHOLOGY')">Psychology</a></li>
+            <li><a onclick="goHome()">All News</a></li>
           </ul>
         </div>
       </div>
@@ -287,11 +283,11 @@
       }
 
       function extractTextFromHTML(html) {
-          if (!html) return "";
-          const tempDiv = document.createElement("div");
-          tempDiv.innerHTML = html;
-          const text = tempDiv.textContent || tempDiv.innerText || "";
-          return text.length > 200 ? text.substring(0, 200) + "..." : text;
+        if (!html) return "";
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = html;
+        const text = tempDiv.textContent || tempDiv.innerText || "";
+        return text.length > 200 ? text.substring(0, 200) + "..." : text;
       }
 
       // 2. Load dữ liệu từ Supabase
@@ -324,7 +320,8 @@
           if (categoryFilter === 'ALL') {
               document.getElementById("main-category-title").innerText = "LATEST NEWS";
           } else {
-              document.getElementById("main-category-title").innerText = categoryFilter;
+              // Xóa dấu gạch dưới để hiển thị đẹp hơn (VD: TRUE_CRIME -> TRUE CRIME)
+              document.getElementById("main-category-title").innerText = categoryFilter.replace('_', ' ');
           }
 
           document.getElementById("article-view").classList.add("hidden");
@@ -351,7 +348,7 @@
               <article class="post">
                 ${imgTag}
                 <h2 class="post-title" onclick="readArticle('${item.id}')">${item.title}</h2>
-                <div class="post-meta">${item.author} · ${item.date} · Chuyên mục: ${item.category}</div>
+                <div class="post-meta">${item.author} · ${item.date} · Category: ${item.category.replace('_', ' ')}</div>
                 <div class="post-excerpt">${item.excerpt}</div>
                 <a class="continue-reading" onclick="readArticle('${item.id}')">Continue reading ${item.title}...</a>
               </article>
