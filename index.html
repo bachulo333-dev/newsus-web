@@ -292,18 +292,18 @@
       // 2. Load dữ liệu từ Supabase
       async function loadPostList(categoryFilter = 'ALL') {
         try {
-          // ĐÃ SỬA: Yêu cầu Supabase sắp xếp bài mới nhất lên đầu (order by id giảm dần)
+          // CHỮA CHÁY 400: Sắp xếp theo cột thời gian (created_at) thay vì cột id
           const { data: rows, error } = await supabaseClient
               .from('post')
               .select('*')
-              .order('id', { ascending: false });
+              .order('created_at', { ascending: false });
 
           if (error) throw error;
 
-          // ĐÃ SỬA: Lấy ID thật từ Supabase (row.id) thay vì ID ảo (index)
-          allPosts = rows.map((row) => {
+          // CHỮA CHÁY 400: Trả về dùng index làm ID ảo để bài viết hiện được lên web
+          allPosts = rows.map((row, index) => {
             return {
-              id: row.id, 
+              id: index, 
               title: row.title || "Bài viết không tên",
               author: row.author || "Lê Duy Bách",
               date: "Mới đây", 
@@ -313,8 +313,6 @@
               thumb: row.image_url || ""
             };
           });
-
-          // ĐÃ XÓA dòng allPosts.reverse(); ở đây vì dữ liệu đã chuẩn từ Supabase
 
           if (categoryFilter === 'ALL') {
               document.getElementById("main-category-title").innerText = "LATEST NEWS";
