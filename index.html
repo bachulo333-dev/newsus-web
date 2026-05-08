@@ -246,7 +246,6 @@
         document.getElementById("home-view").classList.remove("hidden");
         window.scrollTo(0, 0);
         
-        // ĐÃ SỬA: Xóa ID trên thanh địa chỉ khi về trang chủ
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.pushState({path:cleanUrl},'',cleanUrl);
         
@@ -258,7 +257,6 @@
         document.getElementById("article-view").classList.remove("hidden");
         window.scrollTo(0, 0);
 
-        // ĐÃ SỬA: Cập nhật URL có chứa ID bài viết
         const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
         window.history.pushState({path:newurl},'',newurl);
 
@@ -277,7 +275,6 @@
             thumbEl.style.display = "none";
           }
 
-          // Tự động chuyển dấu Enter thành thẻ xuống dòng <br>
           document.getElementById("article-content").innerHTML = article.content.replace(/\n/g, '<br>'); 
         } else {
           document.getElementById("article-content").innerHTML = "<p>Không tìm thấy bài viết.</p>";
@@ -295,16 +292,18 @@
       // 2. Load dữ liệu từ Supabase
       async function loadPostList(categoryFilter = 'ALL') {
         try {
+          // ĐÃ SỬA: Yêu cầu Supabase sắp xếp bài mới nhất lên đầu (order by id giảm dần)
           const { data: rows, error } = await supabaseClient
               .from('post')
-              .select('*');
+              .select('*')
+              .order('id', { ascending: false });
 
           if (error) throw error;
 
-          // Tạo ID ảo dựa trên số thứ tự (index)
-          allPosts = rows.map((row, index) => {
+          // ĐÃ SỬA: Lấy ID thật từ Supabase (row.id) thay vì ID ảo (index)
+          allPosts = rows.map((row) => {
             return {
-              id: index, 
+              id: row.id, 
               title: row.title || "Bài viết không tên",
               author: row.author || "Lê Duy Bách",
               date: "Mới đây", 
@@ -315,17 +314,13 @@
             };
           });
 
-          // Đảo ngược mảng để bài vừa đăng lên đầu
-          allPosts.reverse();
+          // ĐÃ XÓA dòng allPosts.reverse(); ở đây vì dữ liệu đã chuẩn từ Supabase
 
-          // Đổi Tiêu đề chuyên mục trên web
           if (categoryFilter === 'ALL') {
               document.getElementById("main-category-title").innerText = "LATEST NEWS";
           } else {
-              // Xóa dấu gạch dưới để hiển thị đẹp hơn (VD: TRUE_CRIME -> TRUE CRIME)
               document.getElementById("main-category-title").innerText = categoryFilter.replace('_', ' ');
               
-              // Xóa ID trên thanh URL nếu người dùng bấm vào một chuyên mục
               const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
               window.history.pushState({path:cleanUrl},'',cleanUrl);
           }
@@ -367,20 +362,17 @@
         }
       }
 
-      // ĐÃ SỬA: Hàm khởi động ứng dụng để kiểm tra URL xem có chứa ID bài viết không
       async function initApp() {
-          await loadPostList('ALL'); // Đợi tải xong toàn bộ danh sách bài viết
+          await loadPostList('ALL'); 
           
-          // Lấy tham số ?id=... từ thanh địa chỉ
           const urlParams = new URLSearchParams(window.location.search);
           const postId = urlParams.get('id');
           
           if (postId !== null) {
-              readArticle(postId); // Nếu có ID, tự động mở thẳng bài viết đó
+              readArticle(postId); 
           }
       }
 
-      // Gọi hàm khởi động thay vì gọi trực tiếp loadPostList('ALL')
       initApp();
     </script>
 
