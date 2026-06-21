@@ -90,7 +90,6 @@
 
     let base64ImageData = "";
 
-    // Hàm thông minh tự động nén ảnh chất lượng cao để tránh lỗi cơ sở dữ liệu
     function previewAndCompressImage(input) {
         const file = input.files[0];
         const preview = document.getElementById("image-preview-element");
@@ -101,12 +100,11 @@
                 const img = new Image();
                 img.src = e.target.result;
                 img.onload = function() {
-                    // Tạo một Canvas ngầm để xử lý nén kích thước ảnh
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // Giới hạn chiều rộng ảnh tối đa là 800px chuẩn hiển thị báo điện tử
-                    const maxW = 800;
+                    // Nén nhỏ chiều rộng ảnh xuống 640px để giảm tải dữ liệu tối đa cho database
+                    const maxW = 640;
                     const scale = maxW / img.width;
                     
                     if (img.width > maxW) {
@@ -118,9 +116,8 @@
                     }
                     
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    // Xuất ra mã chuỗi chất lượng cao tối ưu 70% dung lượng gốc
-                    base64ImageData = canvas.toDataURL('image/jpeg', 0.7);
+                    // Giảm chất lượng ảnh xuống 0.6 để chuỗi text cực ngắn và nhẹ
+                    base64ImageData = canvas.toDataURL('image/jpeg', 0.6);
                     preview.src = base64ImageData;
                     preview.style.display = "block";
                 }
@@ -141,38 +138,44 @@
         const publishBtn = document.getElementById("publish-btn");
 
         if(!title || !content) {
-            alert("Vui lòng nhập tiêu đề và nội dung bài viết!");
+            alert("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết!");
             return;
         }
 
         try {
             publishBtn.disabled = true;
-            publishBtn.innerText = "Publishing... Please wait...";
+            publishBtn.innerText = "Publishing to Network Engine...";
+
+            // Thực hiện đóng gói dữ liệu an toàn
+            const payload = { 
+                title: title, 
+                image_url: base64ImageData ? base64ImageData.trim() : "", 
+                content: content,
+                author: "Lê Duy Bách",
+                affiliate_url: affiliate_url ? affiliate_url.trim() : "https://s.shopee.vn/1gG0ShTYxL",
+                category: category
+            };
 
             const { data, error } = await supabaseClient
                 .from('post')
-                .insert([
-                    { 
-                        title: title, 
-                        image_url: base64ImageData, 
-                        content: content,
-                        author: "Lê Duy Bách",
-                        affiliate_url: affiliate_url,
-                        category: category
-                    }
-                ]);
+                .insert([payload])
+                .select();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Supabase Error Details:", error);
+                throw new Error(error.message + " (Code: " + error.code + ")");
+            }
             
-            alert("Đã xuất bản thành công lên danh mục " + category + "!");
+            alert("Đã xuất bản thành công bài viết lên danh mục " + category + "!");
             
+            // Dọn dẹp form sau khi đăng thành công
             document.getElementById("post-title").value = "";
             document.getElementById("post-image-file").value = "";
             document.getElementById("image-preview-element").style.display = "none";
             base64ImageData = "";
             quill.setContents([]);
         } catch (err) {
-            alert("Lỗi kết nối cơ sở dữ liệu: " + err.message);
+            alert("Hệ thống báo lỗi dữ liệu: " + err.message + "\n\n-> Hãy kiểm tra xem bạn đã chạy lệnh SQL tắt RLS ở Bước 1 chưa.");
         } finally {
             publishBtn.disabled = false;
             publishBtn.innerText = "Publish to Global Stream";
