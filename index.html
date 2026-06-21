@@ -35,6 +35,7 @@
       nav { border-top: 1px solid var(--color-border); border-bottom: 4px double var(--color-dark); padding: 8px 0; }
       nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; }
       nav ul li a { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+      nav ul li a.active { color: var(--color-accent); border-bottom: 2px solid var(--color-accent); }
 
       /* MAIN CONTAINER */
       .main-container { max-width: 1340px; margin: 25px auto; padding: 0 25px; box-sizing: border-box; }
@@ -94,25 +95,25 @@
       .close-ad-btn { position: absolute; top: -15px; right: -15px; background: var(--color-dark); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; justify-content: center; align-items: center; }
       .close-ad-btn:disabled { background: #777; cursor: not-allowed; }
       
-      /* Thùng chứa banner sạch sẽ không lòi chữ */
       #adsterra-banner-container { min-height: 250px; display: flex; justify-content: center; align-items: center; background: #fafafa; margin: 10px 0; padding: 5px; }
+      .section-headline { font-size: 24px; font-family: var(--font-serif-heading); font-weight: 800; border-bottom: 1px solid #111; padding-bottom: 5px; margin-bottom: 20px; text-transform: uppercase; }
     </style>
   </head>
   <body>
 
     <header>
       <div class="top-meta-bar" id="live-date">GLOBAL NARRATIVE REPOSITORY</div>
-      <div class="logo" onclick="goHome()">FREE NEWS US</div>
+      <div class="logo" onclick="switchCategory('ALL')">FREE NEWS US</div>
       <nav>
         <ul>
-          <li><a onclick="goHome()">World</a></li>
-          <li><a onclick="goHome()">U.S.</a></li>
-          <li><a onclick="goHome()">Politics</a></li>
-          <li><a onclick="goHome()">Business</a></li>
-          <li><a onclick="goHome()">Technology</a></li>
-          <li><a onclick="goHome()">Science</a></li>
-          <li><a onclick="goHome()">Health</a></li>
-          <li><a onclick="goHome()">Opinion</a></li>
+          <li><a id="menu-ALL" class="active" onclick="switchCategory('ALL')">Home</a></li>
+          <li><a id="menu-WORLD" onclick="switchCategory('WORLD')">World</a></li>
+          <li><a id="menu-US" onclick="switchCategory('US')">U.S.</a></li>
+          <li><a id="menu-POLITICS" onclick="switchCategory('POLITICS')">Politics</a></li>
+          <li><a id="menu-BUSINESS" onclick="switchCategory('BUSINESS')">Business</a></li>
+          <li><a id="menu-TECHNOLOGY" onclick="switchCategory('TECHNOLOGY')">Technology</a></li>
+          <li><a id="menu-SCIENCE" onclick="switchCategory('SCIENCE')">Science</a></li>
+          <li><a id="menu-HEALTH" onclick="switchCategory('HEALTH')">Health</a></li>
         </ul>
       </nav>
     </header>
@@ -120,19 +121,22 @@
     <div class="main-container">
       
       <div id="home-view">
-        <div class="homepage-layout">
-          <div class="main-hero" id="hero-block"></div>
-          
-          <div class="sub-features" id="sub-features-block"></div>
-          
-          <div class="trending-panel">
-            <span class="panel-section-title">Trending Stories</span>
-            <div id="trending-block"></div>
+        <div id="magazine-layout-block">
+          <div class="homepage-layout">
+            <div class="main-hero" id="hero-block"></div>
+            
+            <div class="sub-features" id="sub-features-block"></div>
+            
+            <div class="trending-panel">
+              <span class="panel-section-title">Trending Stories</span>
+              <div id="trending-block"></div>
+            </div>
           </div>
         </div>
 
         <div class="stream-grid-block">
-          <span class="panel-section-title" style="margin-bottom:20px;">More News</span>
+          <div id="stream-title" class="section-headline" style="display:none;">More News</div>
+          <span id="trending-title-fixed" class="panel-section-title" style="margin-bottom:20px;">More News</span>
           <div class="stream-grid" id="stream-grid-container"></div>
         </div>
       </div>
@@ -154,7 +158,6 @@
       <div class="ad-box">
         <button id="close-ad-btn" class="close-ad-btn" onclick="triggerAffiliateBypass()">3</button>
         <div style="font-size:10px; color:#aaa; letter-spacing:1px; margin-bottom:10px;">SPONSORED RESOURCING</div>
-        
         <div id="adsterra-banner-container"></div>
       </div>
     </div>
@@ -165,16 +168,54 @@
       const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
       let allPosts = [];
+      let currentCategory = "ALL";
       let currentActiveAffiliateLink = "https://s.shopee.vn/1gG0ShTYxL";
 
       document.getElementById("live-date").innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
       function goHome() {
+        switchCategory('ALL');
+      }
+
+      // Hàm thông minh tự động đoán danh mục dựa trên từ khoá tiêu đề để lọc danh mục
+      function getPostAutoCategory(title) {
+        const t = title.toLowerCase();
+        if (t.includes("ai") || t.includes("tech") || t.includes("silicon") || t.includes("apple") || t.includes("google") || t.includes("software") || t.includes("phone") || t.includes("chatgpt")) {
+          return "TECHNOLOGY";
+        }
+        if (t.includes("market") || t.includes("stock") || t.includes("gold") || t.includes("business") || t.includes("money") || t.includes("economy") || t.includes("billion")) {
+          return "BUSINESS";
+        }
+        if (t.includes("biden") || t.includes("trump") || t.includes("election") || t.includes("white house") || t.includes("politics") || t.includes("government")) {
+          return "POLITICS";
+        }
+        if (t.includes("science") || t.includes("space") || t.includes("nasa") || t.includes("mars") || t.includes("earth")) {
+          return "SCIENCE";
+        }
+        if (t.includes("health") || t.includes("virus") || t.includes("doctor") || t.includes("cancer") || t.includes("medical")) {
+          return "HEALTH";
+        }
+        if (t.includes("u.s.") || t.includes("america") || t.includes("washington")) {
+          return "US";
+        }
+        return "WORLD"; // Mặc định trả về World nếu không dính từ khoá nào đặc biệt
+      }
+
+      function switchCategory(cat) {
+        currentCategory = cat;
+        
+        // Active class cho Menu tương ứng
+        document.querySelectorAll("nav ul li a").forEach(el => el.classList.remove("active"));
+        const activeMenu = document.getElementById(`menu-${cat}`);
+        if(activeMenu) activeMenu.classList.add("active");
+
         document.getElementById("article-view").classList.add("hidden");
         document.getElementById("home-view").classList.remove("hidden");
         window.scrollTo(0, 0);
+
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.pushState({path:cleanUrl},'',cleanUrl);
+
         renderGlobalMagazineLayout();
       }
 
@@ -219,9 +260,8 @@
         let timeLeft = 3;
         btn.innerText = timeLeft;
 
-        // Bơm mã banner chạy ngầm động bằng Javascript để không bao giờ bị lòi chữ
         const container = document.getElementById("adsterra-banner-container");
-        container.innerHTML = ""; // Clear cũ
+        container.innerHTML = ""; 
         
         window.atOptions = {
           'key' : '29716204',
@@ -264,61 +304,102 @@
       function renderGlobalMagazineLayout() {
         if(allPosts.length === 0) return;
 
-        // 1. Hero Block
-        const heroPost = allPosts[0];
-        const heroImg = heroPost.thumb ? `<div class="hero-img-wrapper"><img src="${heroPost.thumb}" onclick="readArticle('${heroPost.id}')"></div>` : "";
-        document.getElementById("hero-block").innerHTML = `
-          ${heroImg}
-          <span class="tag" style="margin-top:12px;">Breaking News</span>
-          <h2 class="hero-title"><a onclick="readArticle('${heroPost.id}')">${heroPost.title}</a></h2>
-          <p class="hero-excerpt">${heroPost.excerpt}</p>
-        `;
+        // Lọc bài viết dựa trên danh mục được chọn
+        let filteredPosts = allPosts;
+        if (currentCategory !== "ALL") {
+          filteredPosts = allPosts.filter(post => getPostAutoCategory(post.title) === currentCategory);
+        }
 
-        // 2. Sub-features Block
-        const subPosts = allPosts.slice(1, 4);
-        let subHtml = "";
-        subPosts.forEach(post => {
-          subHtml += `
-            <div class="sub-card">
-              <span class="tag">Update</span>
-              <h3 class="sub-card-title"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
-              <p class="sub-card-excerpt">${post.excerpt}</p>
-            </div>
+        const magazineBlock = document.getElementById("magazine-layout-block");
+        const streamTitle = document.getElementById("stream-title");
+        const trendingTitleFixed = document.getElementById("trending-title-fixed");
+
+        if (currentCategory === "ALL") {
+          // CHẾ ĐỘ HOME: Hiện cấu trúc tạp chí 3 cột chuẩn NYT
+          magazineBlock.style.display = "block";
+          streamTitle.style.display = "none";
+          trendingTitleFixed.style.display = "block";
+
+          // 1. Hero Block
+          const heroPost = allPosts[0];
+          const heroImg = heroPost.thumb ? `<div class="hero-img-wrapper"><img src="${heroPost.thumb}" onclick="readArticle('${heroPost.id}')"></div>` : "";
+          document.getElementById("hero-block").innerHTML = `
+            ${heroImg}
+            <span class="tag" style="margin-top:12px;">Breaking News</span>
+            <h2 class="hero-title"><a onclick="readArticle('${heroPost.id}')">${heroPost.title}</a></h2>
+            <p class="hero-excerpt">${heroPost.excerpt}</p>
           `;
-        });
-        document.getElementById("sub-features-block").innerHTML = subHtml;
 
-        // 3. Trending Block
-        let trendingPosts = [...allPosts].sort(() => 0.5 - Math.random()).slice(0, 5);
-        let trendHtml = "";
-        trendingPosts.forEach((post, index) => {
-          trendHtml += `
-            <div class="trending-row">
-              <div class="trending-num">0${index+1}</div>
-              <div>
-                <h4 class="trending-text"><a onclick="readArticle('${post.id}')">${post.title}</a></h4>
+          // 2. Sub-features Block
+          const subPosts = allPosts.slice(1, 4);
+          let subHtml = "";
+          subPosts.forEach(post => {
+            subHtml += `
+              <div class="sub-card">
+                <span class="tag">${getPostAutoCategory(post.title)}</span>
+                <h3 class="sub-card-title"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
+                <p class="sub-card-excerpt">${post.excerpt}</p>
               </div>
-            </div>
-          `;
-        });
-        document.getElementById("trending-block").innerHTML = trendHtml;
+            `;
+          });
+          document.getElementById("sub-features-block").innerHTML = subHtml;
 
-        // 4. Stream Grid
-        const streamPosts = allPosts.slice(4);
-        let streamHtml = "";
-        const displayPosts = streamPosts.length > 0 ? streamPosts : allPosts;
-        
-        displayPosts.forEach(post => {
-          const cardImg = post.thumb ? `<img src="${post.thumb}" onclick="readArticle('${post.id}')">` : `<div style="background:#f5f5f5;height:150px;"></div>`;
-          streamHtml += `
-            <div class="grid-card">
-              ${cardImg}
-              <h3 class="grid-card-title"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
-              <p class="grid-card-excerpt">${post.excerpt}</p>
-            </div>
-          `;
-        });
-        document.getElementById("stream-grid-container").innerHTML = streamHtml;
+          // 3. Trending Block
+          let trendingPosts = [...allPosts].sort(() => 0.5 - Math.random()).slice(0, 5);
+          let trendHtml = "";
+          trendingPosts.forEach((post, index) => {
+            trendHtml += `
+              <div class="trending-row">
+                <div class="trending-num">0${index+1}</div>
+                <div>
+                  <h4 class="trending-text"><a onclick="readArticle('${post.id}')">${post.title}</a></h4>
+                </div>
+              </div>
+            `;
+          });
+          document.getElementById("trending-block").innerHTML = trendHtml;
+
+          // 4. Các bài còn lại đổ vào Grid dưới
+          const streamPosts = allPosts.slice(4);
+          let streamHtml = "";
+          const displayPosts = streamPosts.length > 0 ? streamPosts : allPosts;
+          
+          displayPosts.forEach(post => {
+            const cardImg = post.thumb ? `<img src="${post.thumb}" onclick="readArticle('${post.id}')">` : `<div style="background:#f5f5f5;height:150px;"></div>`;
+            streamHtml += `
+              <div class="grid-card">
+                ${cardImg}
+                <h3 class="grid-card-title"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
+                <p class="grid-card-excerpt">${post.excerpt}</p>
+              </div>
+            `;
+          });
+          document.getElementById("stream-grid-container").innerHTML = streamHtml;
+
+        } else {
+          // CHẾ ĐỘ CHUYÊN MỤC LẺ: Ẩn 3 cột tạp chí phức tạp đi, đổ thẳng toàn bộ bài thuộc danh mục đó vào lưới ô bàn cờ
+          magazineBlock.style.display = "none";
+          streamTitle.style.display = "block";
+          streamTitle.innerText = `${currentCategory} ARCHIVE STREAM`;
+          trendingTitleFixed.style.display = "none";
+
+          let streamHtml = "";
+          if(filteredPosts.length === 0) {
+            streamHtml = `<div style="grid-column: span 4; text-align:center; color:#888; padding: 40px 0;">No articles found in this section yet. Clear stream pipeline.</div>`;
+          } else {
+            filteredPosts.forEach(post => {
+              const cardImg = post.thumb ? `<img src="${post.thumb}" onclick="readArticle('${post.id}')">` : `<div style="background:#f5f5f5;height:150px;"></div>`;
+              streamHtml += `
+                <div class="grid-card">
+                  ${cardImg}
+                  <h3 class="grid-card-title"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
+                  <p class="grid-card-excerpt">${post.excerpt}</p>
+                </div>
+              `;
+            });
+          }
+          document.getElementById("stream-grid-container").innerHTML = streamHtml;
+        }
       }
 
       async function loadDataFromSupabase() {
