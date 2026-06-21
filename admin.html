@@ -14,7 +14,7 @@
         h2 { margin-top: 0; font-weight: 700; color: #111; border-bottom: 2px solid #eee; padding-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
-        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
+        input[type="text"], input[type="file"], select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
         input[type="file"] { background: #fafafa; cursor: pointer; }
         .image-preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 4px; display: none; object-fit: cover; border: 1px dashed #ccc; }
         .editor-wrapper { background: #fff; border-radius: 4px; margin-bottom: 20px; }
@@ -32,6 +32,19 @@
     <div class="form-group">
         <label>Headline (Tiêu đề bài viết)</label>
         <input type="text" id="post-title" placeholder="e.g., Inside the Secret Tech Race Shaping the Next Decade...">
+    </div>
+
+    <div class="form-group">
+        <label>Section (Chọn phân loại danh mục cho bài viết)</label>
+        <select id="post-category">
+            <option value="WORLD">World</option>
+            <option value="US">U.S.</option>
+            <option value="POLITICS">Politics</option>
+            <option value="BUSINESS">Business</option>
+            <option value="TECHNOLOGY">Technology</option>
+            <option value="SCIENCE">Science</option>
+            <option value="HEALTH">Health</option>
+        </select>
     </div>
     
     <div class="form-group">
@@ -77,7 +90,6 @@
 
     let base64ImageData = "";
 
-    // Hàm xử lý xem trước và chuyển đổi ảnh thành mã văn bản Base64 cực nhanh
     function previewAndConvertImage(input) {
         const file = input.files[0];
         const preview = document.getElementById("image-preview-element");
@@ -85,7 +97,7 @@
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                base64ImageData = e.target.result; // Lưu dữ liệu mã hoá ảnh
+                base64ImageData = e.target.result;
                 preview.src = base64ImageData;
                 preview.style.display = "block";
             }
@@ -99,6 +111,7 @@
 
     async function publishToGlobalStream() {
         const title = document.getElementById("post-title").value;
+        const category = document.getElementById("post-category").value;
         const affiliate_url = document.getElementById("post-affiliate").value;
         const content = quill.root.innerHTML;
         const publishBtn = document.getElementById("publish-btn");
@@ -117,19 +130,18 @@
                 .insert([
                     { 
                         title: title, 
-                        image_url: base64ImageData, // Đẩy thẳng chuỗi ảnh vào Supabase công cụ sạch gọn
+                        image_url: base64ImageData, 
                         content: content,
                         author: "Lê Duy Bách",
                         affiliate_url: affiliate_url,
-                        category: "NEWS"
+                        category: category // Ghi nhận danh mục chuẩn xác chọn từ form
                     }
                 ]);
 
             if (error) throw error;
             
-            alert("Đã xuất bản thành công lên dòng chảy tin tức toàn cầu!");
+            alert("Đã xuất bản thành công lên danh mục " + category + "!");
             
-            // Reset form sau khi đăng xong bài thành công
             document.getElementById("post-title").value = "";
             document.getElementById("post-image-file").value = "";
             document.getElementById("image-preview-element").style.display = "none";
