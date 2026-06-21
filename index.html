@@ -7,7 +7,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght=0,600;0,800;1,400&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght=0,600;0,800;1,400&family=Inter:wght=400;500;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -152,7 +152,6 @@
       <p>© 2026 FREE NEWS US NETWORK. ALL RIGHTS RESERVED. HIGH-FIDELITY NEWSROOM TRANSMISSION.</p>
     </footer>
 
-    <!-- Khung Adsterra Banner đồng bộ -->
     <div id="interstitial-overlay" class="hidden">
       <div class="ad-box">
         <button id="close-ad-btn" class="close-ad-btn" onclick="closeAdOverlay()" disabled>3</button>
@@ -172,6 +171,21 @@
       let searchQuery = ""; 
 
       document.getElementById("live-date").innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      // Hàm AI tự động quét tiêu đề đoán danh mục nếu dữ liệu cũ trống (fallback)
+      function guessCategory(title, storedCat) {
+        if (storedCat && storedCat.trim() !== "" && storedCat !== "NEWS") {
+          return storedCat.toUpperCase();
+        }
+        const t = (title || "").toLowerCase();
+        if (t.includes("ai") || t.includes("tech") || t.includes("silicon") || t.includes("apple") || t.includes("google") || t.includes("chatgpt")) return "TECHNOLOGY";
+        if (t.includes("market") || t.includes("stock") || t.includes("gold") || t.includes("business") || t.includes("money") || t.includes("economy")) return "BUSINESS";
+        if (t.includes("biden") || t.includes("trump") || t.includes("election") || t.includes("politics") || t.includes("government")) return "POLITICS";
+        if (t.includes("science") || t.includes("space") || t.includes("nasa") || t.includes("mars")) return "SCIENCE";
+        if (t.includes("health") || t.includes("virus") || t.includes("doctor") || t.includes("medical")) return "HEALTH";
+        if (t.includes("u.s.") || t.includes("america")) return "US";
+        return "WORLD";
+      }
 
       function switchCategory(cat) {
         currentCategory = cat;
@@ -203,7 +217,7 @@
         const article = allPosts.find((post) => String(post.id) === String(id));
         if (!article) return;
 
-        pendingArticleId = id; 
+        pendingArticleId = String(id); 
 
         let targetAffiliate = "https://s.shopee.vn/4fu2COK7Or";
         if (article.affiliate_url && article.affiliate_url.trim() !== "" && article.affiliate_url !== "https://s.shopee.vn/1gG0ShTYxL") {
@@ -225,9 +239,9 @@
         let timeLeft = 3;
         btn.innerText = timeLeft;
 
-        // Xóa sạch khung cũ và chèn trực tiếp script Adsterra vào DOM
         container.innerHTML = "";
         
+        // Nhúng code cấu hình Adsterra trực tiếp loại bỏ hoàn toàn lỗi trang trắng
         window.atOptions = {
           'key' : '29716204',
           'format' : 'iframe',
@@ -295,19 +309,20 @@
       }
 
       function renderGlobalMagazineLayout() {
-        if(allPosts.length === 0) {
-          document.getElementById("stream-grid-container").innerHTML = `<div style="grid-column: span 4; text-align:center; padding:50px; color:#888;">No articles found.</div>`;
-          return;
-        }
+        if(allPosts.length === 0) return;
 
-        let filteredPosts = allPosts;
-        if (currentCategory !== "ALL") {
-          filteredPosts = allPosts.filter(post => post.category === currentCategory);
-        }
-
-        if (searchQuery !== "") {
-          filteredPosts = filteredPosts.filter(post => post.title.toLowerCase().includes(searchQuery));
-        }
+        // Lọc bài viết và áp dụng AI tự động quét phân mục thông minh
+        let filteredPosts = allPosts.filter(post => {
+          const matchedCat = guessCategory(post.title, post.category);
+          
+          // Lọc theo Category Menu
+          if (currentCategory !== "ALL" && matchedCat !== currentCategory) return false;
+          
+          // Lọc theo Từ khóa tìm kiếm
+          if (searchQuery !== "" && !post.title.toLowerCase().includes(searchQuery)) return false;
+          
+          return true;
+        });
 
         const magazineBlock = document.getElementById("magazine-layout-block");
         const trendingTitleFixed = document.getElementById("trending-title-fixed");
@@ -316,21 +331,23 @@
           magazineBlock.style.display = "block";
           trendingTitleFixed.style.display = "block";
 
+          // SỬA LỖI TRUYỀN ID CHUẨN XÁC CHO HERO BLOCK
           const heroPost = allPosts[0];
           const heroImg = heroPost.image_url ? `<div class="hero-img-wrapper"><img src="${heroPost.image_url}" onclick="readArticle('${heroPost.id}')"></div>` : "";
           document.getElementById("hero-block").innerHTML = `
             ${heroImg}
-            <span class="tag" style="margin-top:12px;">${heroPost.category || 'Breaking'}</span>
+            <span class="tag" style="margin-top:12px;">${guessCategory(heroPost.title, heroPost.category)}</span>
             <h2 class="hero-title"><a onclick="readArticle('${heroPost.id}')">${heroPost.title}</a></h2>
             <p class="hero-excerpt">${heroPost.excerpt}</p>
           `;
 
+          // SỬA LỖI TRUYỀN ID CHUẨN XÁC CHO SUB FEATURES BLOCK
           const subPosts = allPosts.slice(1, 4);
           let subHtml = "";
           subPosts.forEach(post => {
             subHtml += `
               <div class="sub-card">
-                <span class="tag">${post.category || 'Update'}</span>
+                <span class="tag">${guessCategory(post.title, post.category)}</span>
                 <h3 class="sub-card-title"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
                 <p class="sub-card-excerpt">${post.excerpt}</p>
               </div>
@@ -338,6 +355,7 @@
           });
           document.getElementById("sub-features-block").innerHTML = subHtml;
 
+          // SỬA LỖI TRUYỀN ID CHUẨN XÁC CHO TRENDING STORIES
           let trendingPosts = allPosts.slice(0, 5);
           let trendHtml = "";
           trendingPosts.forEach((post, index) => {
@@ -352,6 +370,7 @@
           });
           document.getElementById("trending-block").innerHTML = trendHtml;
 
+          // SỬA LỖI TRUYỀN ID CHUẨN XÁC CHO STREAM GRID BLOCK
           const streamPosts = allPosts.slice(4);
           let streamHtml = "";
           const displayPosts = streamPosts.length > 0 ? streamPosts : allPosts;
@@ -374,7 +393,7 @@
 
           let streamHtml = "";
           if(filteredPosts.length === 0) {
-            streamHtml = `<div style="grid-column: span 4; text-align:center; color:#888; padding: 40px 0;">No articles match your search criteria.</div>`;
+            streamHtml = `<div style="grid-column: span 4; text-align:center; color:#888; padding: 40px 0;">No articles match your criteria.</div>`;
           } else {
             filteredPosts.forEach(post => {
               const cardImg = post.image_url ? `<img src="${post.image_url}" onclick="readArticle('${post.id}')">` : `<div style="background:#f5f5f5;height:150px;"></div>`;
@@ -399,7 +418,7 @@
           if (rows) {
             allPosts = rows.map((row) => {
               return {
-                id: row.id, 
+                id: String(row.id), 
                 title: row.title || "Untitled",
                 author: row.author || "Lê Duy Bách",
                 excerpt: extractTextFromHTML(row.content),
@@ -409,7 +428,7 @@
                 category: row.category || "WORLD"
               };
             });
-            allPosts.reverse(); 
+            allPosts.sort((a, b) => Number(b.id) - Number(a.id)); 
           }
 
           renderGlobalMagazineLayout();
