@@ -49,7 +49,7 @@
     
     <div class="form-group">
         <label>Cover Image (Tải ảnh đại diện lên trực tiếp)</label>
-        <input type="file" id="post-image-file" accept="image/*" onchange="previewAndConvertImage(this)">
+        <input type="file" id="post-image-file" accept="image/*" onchange="previewAndCompressImage(this)">
         <img id="image-preview-element" class="image-preview">
     </div>
 
@@ -90,16 +90,40 @@
 
     let base64ImageData = "";
 
-    function previewAndConvertImage(input) {
+    // Hàm thông minh tự động nén ảnh chất lượng cao để tránh lỗi cơ sở dữ liệu
+    function previewAndCompressImage(input) {
         const file = input.files[0];
         const preview = document.getElementById("image-preview-element");
         
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                base64ImageData = e.target.result;
-                preview.src = base64ImageData;
-                preview.style.display = "block";
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    // Tạo một Canvas ngầm để xử lý nén kích thước ảnh
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Giới hạn chiều rộng ảnh tối đa là 800px chuẩn hiển thị báo điện tử
+                    const maxW = 800;
+                    const scale = maxW / img.width;
+                    
+                    if (img.width > maxW) {
+                        canvas.width = maxW;
+                        canvas.height = img.height * scale;
+                    } else {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                    
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Xuất ra mã chuỗi chất lượng cao tối ưu 70% dung lượng gốc
+                    base64ImageData = canvas.toDataURL('image/jpeg', 0.7);
+                    preview.src = base64ImageData;
+                    preview.style.display = "block";
+                }
             }
             reader.readAsDataURL(file);
         } else {
@@ -134,7 +158,7 @@
                         content: content,
                         author: "Lê Duy Bách",
                         affiliate_url: affiliate_url,
-                        category: category // Ghi nhận danh mục chuẩn xác chọn từ form
+                        category: category
                     }
                 ]);
 
