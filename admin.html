@@ -127,9 +127,7 @@
 
             let finalImageUrl = "";
 
-            // Nếu người dùng có chọn file ảnh, tiến hành tải lên kho Storage
             if (selectedImageFile) {
-                // Tạo tên file ngẫu nhiên để không bị trùng lặp trên hệ thống đám mây
                 const fileExt = selectedImageFile.name.split('.').pop();
                 const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                 
@@ -140,7 +138,6 @@
 
                 if (uploadError) throw new Error("Lỗi tải ảnh lên Storage: " + uploadError.message);
 
-                // Lấy URL công khai của file ảnh vừa tải lên thành công
                 const { data: publicUrlData } = supabaseClient
                     .storage
                     .from('news-images')
@@ -151,11 +148,14 @@
 
             publishBtn.innerText = "Syncing database data...";
 
-            // Lưu thông tin bài viết vào bảng post cùng đường link ảnh cực kỳ sạch
+            // Đã tích hợp tự động sinh mã ID ngẫu nhiên chống trùng lặp khóa chính hoàn toàn
+            const randomId = Math.floor(100000 + Math.random() * 900000);
+
             const { data, error } = await supabaseClient
                 .from('post')
                 .insert([
                     { 
+                        id: randomId,
                         title: title, 
                         image_url: finalImageUrl, 
                         content: content,
@@ -169,7 +169,6 @@
             
             alert("Xuất bản thành công tin tức lên toàn hệ thống!");
             
-            // Dọn form
             document.getElementById("post-title").value = "";
             document.getElementById("post-image-file").value = "";
             document.getElementById("image-preview-element").style.display = "none";
@@ -178,7 +177,7 @@
 
         } catch (err) {
             alert("Hệ thống nghẽn: " + err.message);
-        } finally {
+        } fill {
             publishBtn.disabled = false;
             publishBtn.innerText = "Publish to Global Stream";
         }
