@@ -81,13 +81,13 @@
       .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-accent); letter-spacing: 0.5px; display: inline-block; margin-bottom: 5px; }
       footer { background-color: #fafafa; border-top: 1px solid var(--color-border); padding: 40px 20px; text-align: center; font-size: 11px; color: var(--color-muted); margin-top: 60px; letter-spacing: 0.5px; }
 
-      #interstitial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 999999; display: flex; justify-content: center; align-items: center; }
-      .ad-box { background: white; width: 92%; max-width: 620px; padding: 20px; border-radius: 4px; position: relative; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-      .close-ad-btn { position: absolute; top: -15px; right: -15px; background: var(--color-dark); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; justify-content: center; align-items: center; }
-      .close-ad-btn:disabled { background: #777; cursor: not-allowed; }
+      /* Cải tiến giao diện khung Quảng cáo Pop-up */
+      #interstitial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); z-index: 999999; display: flex; justify-content: center; align-items: center; }
+      .ad-box { background: white; width: 320px; padding: 20px; border-radius: 6px; position: relative; text-align: center; box-shadow: 0 10px 35px rgba(0,0,0,0.4); }
+      .close-ad-btn { position: absolute; top: -12px; right: -12px; background: var(--color-dark); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+      .close-ad-btn:disabled { background: #666; cursor: not-allowed; color: #ccc; }
       
-      #adsterra-banner-container { min-height: 250px; display: flex; justify-content: center; align-items: center; background: #fafafa; margin: 10px 0; padding: 5px; }
-      .section-headline { font-size: 24px; font-family: var(--font-serif-heading); font-weight: 800; border-bottom: 1px solid #111; padding-bottom: 5px; margin-bottom: 20px; text-transform: uppercase; }
+      #adsterra-banner-container { min-height: 250px; display: flex; justify-content: center; align-items: center; background: #f9f9f9; margin-top: 8px; border: 1px dashed #ccc; }
     </style>
   </head>
   <body>
@@ -144,9 +144,11 @@
 
     <div id="interstitial-overlay" class="hidden">
       <div class="ad-box">
-        <button id="close-ad-btn" class="close-ad-btn" onclick="triggerAffiliateBypass()">3</button>
-        <div style="font-size:10px; color:#aaa; letter-spacing:1px; margin-bottom:10px;">SPONSORED RESOURCING</div>
-        <div id="adsterra-banner-container"></div>
+        <button id="close-ad-btn" class="close-ad-btn" onclick="closeAdOverlay()" disabled>3</button>
+        <div style="font-size:10px; color:#999; letter-spacing:1px; margin-bottom:5px; text-transform: uppercase;">Sponsored Resource</div>
+        <div id="adsterra-banner-container">
+           <iframe src="about:blank" id="ad-iframe" width="300" height="250" frameborder="0" scrolling="no"></iframe>
+        </div>
       </div>
     </div>
 
@@ -157,7 +159,7 @@
 
       let allPosts = [];
       let currentCategory = "ALL";
-      let currentActiveAffiliateLink = "https://s.shopee.vn/1gG0ShTYxL";
+      let pendingArticleId = null;
 
       document.getElementById("live-date").innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -178,36 +180,19 @@
         renderGlobalMagazineLayout();
       }
 
+      // Hàm kích hoạt bẫy click chuẩn xác
       function readArticle(id) {
         const article = allPosts.find((post) => String(post.id) === String(id));
-        if (article) {
-          if (article.affiliate_url && article.affiliate_url.trim() !== "") {
-              currentActiveAffiliateLink = article.affiliate_url;
-          } else {
-              currentActiveAffiliateLink = "https://s.shopee.vn/1gG0ShTYxL";
-          }
+        if (!article) return;
 
-          startInterstitialAd();
+        pendingArticleId = id; // Lưu lại ID bài viết để hiển thị sau khi tắt ad
 
-          document.getElementById("home-view").classList.add("hidden");
-          document.getElementById("article-view").classList.remove("hidden");
-          window.scrollTo(0, 0);
+        // 1. NHẢY LINK SHOPEE TRỰC TIẾP: Trình duyệt nhận diện đây là hành động click trực tiếp -> KHÔNG BỊ CHẶN POP-UP
+        const targetAffiliate = (article.affiliate_url && article.affiliate_url.trim() !== "") ? article.affiliate_url : "https://s.shopee.vn/1gG0ShTYxL";
+        window.open(targetAffiliate, '_blank');
 
-          const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
-          window.history.pushState({path:newurl},'',newurl);
-
-          document.getElementById("article-title").innerText = article.title;
-          document.getElementById("article-meta").innerText = `By ${article.author}  |  Published in Newsroom`;
-          
-          const thumbEl = document.getElementById("article-thumb");
-          if (article.image_url) {
-            thumbEl.src = article.image_url;
-            thumbEl.style.display = "block";
-          } else {
-            thumbEl.style.display = "none";
-          }
-          document.getElementById("article-content").innerHTML = article.content;
-        }
+        // 2. HIỂN THỊ POP-UP QUẢNG CÁO TẠI TAB CŨ
+        startInterstitialAd();
       }
 
       let countdownTimer;
@@ -219,22 +204,34 @@
         let timeLeft = 3;
         btn.innerText = timeLeft;
 
-        const container = document.getElementById("adsterra-banner-container");
-        container.innerHTML = ""; 
-        
-        window.atOptions = {
-          'key' : '29716204',
-          'format' : 'iframe',
-          'height' : 250,
-          'width' : 300,
-          'params' : {}
-        };
-        
-        const scriptNode = document.createElement('script');
-        scriptNode.type = 'text/javascript';
-        scriptNode.src = '//www.highperformanceformat.com/29716204/invoke.js';
-        container.appendChild(scriptNode);
+        // Kỹ thuật nạp Code quảng cáo Adsterra qua Iframe sạch để ép hiển thị 100%
+        const iframe = document.getElementById("ad-iframe");
+        const iframeHtml = `
+          <html>
+            <body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;">
+              <script type="text/javascript">
+                atOptions = {
+                  'key' : '29716204',
+                  'format' : 'iframe',
+                  'height' : 250,
+                  'width' : 300,
+                  'params' : {}
+                };
+              <\/script>
+              <script type="text/javascript" src="//www.highperformanceformat.com/29716204/invoke.js"><\/script>
+            </body>
+          </html>
+        `;
+        iframe.src = "about:blank";
+        setTimeout(() => {
+          const doc = iframe.contentWindow.document;
+          doc.open();
+          doc.write(iframeHtml);
+          doc.close();
+        }, 100);
 
+        // Đếm ngược tắt quảng cáo
+        clearInterval(countdownTimer);
         countdownTimer = setInterval(() => {
           timeLeft--;
           if (timeLeft <= 0) {
@@ -247,9 +244,38 @@
         }, 1000);
       }
 
-      function triggerAffiliateBypass() {
-         window.open(currentActiveAffiliateLink, '_blank');
-         document.getElementById("interstitial-overlay").classList.add("hidden");
+      // Khi người dùng bấm nút X để tắt quảng cáo -> Đọc đúng bài đã chọn
+      function closeAdOverlay() {
+        document.getElementById("interstitial-overlay").classList.add("hidden");
+        if (pendingArticleId) {
+            executeRenderArticleContent(pendingArticleId);
+            pendingArticleId = null;
+        }
+      }
+
+      // Hàm vẽ nội dung bài viết chính xác lên màn hình dựa theo ID
+      function executeRenderArticleContent(id) {
+        const article = allPosts.find((post) => String(post.id) === String(id));
+        if (!article) return;
+
+        document.getElementById("home-view").classList.add("hidden");
+        document.getElementById("article-view").classList.remove("hidden");
+        window.scrollTo(0, 0);
+
+        const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
+        window.history.pushState({path:newurl},'',newurl);
+
+        document.getElementById("article-title").innerText = article.title;
+        document.getElementById("article-meta").innerText = `By ${article.author}  |  Published in Newsroom`;
+        
+        const thumbEl = document.getElementById("article-thumb");
+        if (article.image_url) {
+          thumbEl.src = article.image_url;
+          thumbEl.style.display = "block";
+        } else {
+          thumbEl.style.display = "none";
+        }
+        document.getElementById("article-content").innerHTML = article.content;
       }
 
       function extractTextFromHTML(html) {
@@ -260,9 +286,10 @@
         return text.length > 140 ? text.substring(0, 140) + "..." : text;
       }
 
+      // SỬA LỖI LAYOUT ĐỘNG: Truyền chính xác ID của từng bài viết vào hàm onClick
       function renderGlobalMagazineLayout() {
         if(allPosts.length === 0) {
-          document.getElementById("stream-grid-container").innerHTML = `<div style="grid-column: span 4; text-align:center; padding:50px; color:#888;">No articles found in the repository. Please publish via terminal.</div>`;
+          document.getElementById("stream-grid-container").innerHTML = `<div style="grid-column: span 4; text-align:center; padding:50px; color:#888;">No articles found in the repository. Please publish via admin dashboard.</div>`;
           return;
         }
 
@@ -278,6 +305,7 @@
           magazineBlock.style.display = "block";
           trendingTitleFixed.style.display = "block";
 
+          // Bài viết Hero hàng đầu
           const heroPost = allPosts[0];
           const heroImg = heroPost.image_url ? `<div class="hero-img-wrapper"><img src="${heroPost.image_url}" onclick="readArticle('${heroPost.id}')"></div>` : "";
           document.getElementById("hero-block").innerHTML = `
@@ -287,6 +315,7 @@
             <p class="hero-excerpt">${heroPost.excerpt}</p>
           `;
 
+          // 3 Bài viết phụ bên cạnh (Dùng đúng ID tương ứng)
           const subPosts = allPosts.slice(1, 4);
           let subHtml = "";
           subPosts.forEach(post => {
@@ -300,7 +329,8 @@
           });
           document.getElementById("sub-features-block").innerHTML = subHtml;
 
-          let trendingPosts = [...allPosts].sort(() => 0.5 - Math.random()).slice(0, 5);
+          // Hàng thịnh hành Trending
+          let trendingPosts = allPosts.slice(0, 5);
           let trendHtml = "";
           trendingPosts.forEach((post, index) => {
             trendHtml += `
@@ -314,6 +344,7 @@
           });
           document.getElementById("trending-block").innerHTML = trendHtml;
 
+          // Danh sách lưới bài viết phía dưới cùng
           const streamPosts = allPosts.slice(4);
           let streamHtml = "";
           const displayPosts = streamPosts.length > 0 ? streamPosts : allPosts;
@@ -331,6 +362,7 @@
           document.getElementById("stream-grid-container").innerHTML = streamHtml;
 
         } else {
+          // Giao diện khi bấm vào các danh mục lọc bài viết
           magazineBlock.style.display = "none";
           trendingTitleFixed.style.display = "none";
 
@@ -371,15 +403,16 @@
                 category: row.category || "WORLD"
               };
             });
-            allPosts.reverse(); 
+            allPosts.reverse(); // Đẩy bài mới nhất lên trên đầu
           }
 
           renderGlobalMagazineLayout();
 
+          // Xử lý nếu người dùng vào thẳng link bài viết cụ thể qua query string
           const urlParams = new URLSearchParams(window.location.search);
           const postId = urlParams.get('id');
           if (postId !== null) {
-              readArticle(postId); 
+              executeRenderArticleContent(postId); 
           }
         } catch (err) {
           console.error("System error:", err);
@@ -388,7 +421,5 @@
 
       loadDataFromSupabase();
     </script>
-
-    <script type='text/javascript' src='//www.highperformanceformat.com/29/71/62/29716205.js'></script>
   </body>
 </html>
