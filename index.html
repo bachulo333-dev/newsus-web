@@ -172,19 +172,23 @@
 
       document.getElementById("live-date").innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-      // Hàm AI tự động quét tiêu đề đoán danh mục nếu dữ liệu cũ trống (fallback)
+      // HÀM AI TỰ ĐỘNG PHÂN LOẠI DANH MỤC PHỤC HỒI CHUẨN XÁC
       function guessCategory(title, storedCat) {
-        if (storedCat && storedCat.trim() !== "" && storedCat !== "NEWS") {
-          return storedCat.toUpperCase();
+        const cleanCat = String(storedCat || "").trim().toUpperCase();
+        // Nếu bài viết đã được chọn danh mục chuẩn từ trước (và không phải nhãn NEWS chung), giữ nguyên danh mục đó
+        if (cleanCat !== "" && cleanCat !== "NEWS" && cleanCat !== "NULL" && cleanCat !== "UNDEFINED") {
+          return cleanCat;
         }
-        const t = (title || "").toLowerCase();
-        if (t.includes("ai") || t.includes("tech") || t.includes("silicon") || t.includes("apple") || t.includes("google") || t.includes("chatgpt")) return "TECHNOLOGY";
-        if (t.includes("market") || t.includes("stock") || t.includes("gold") || t.includes("business") || t.includes("money") || t.includes("economy")) return "BUSINESS";
-        if (t.includes("biden") || t.includes("trump") || t.includes("election") || t.includes("politics") || t.includes("government")) return "POLITICS";
-        if (t.includes("science") || t.includes("space") || t.includes("nasa") || t.includes("mars")) return "SCIENCE";
-        if (t.includes("health") || t.includes("virus") || t.includes("doctor") || t.includes("medical")) return "HEALTH";
-        if (t.includes("u.s.") || t.includes("america")) return "US";
-        return "WORLD";
+        
+        // Tiến hành AI tự động quét từ khóa tiêu đề nếu bài viết chưa phân mục
+        const t = String(title || "").toLowerCase();
+        if (t.includes("ai") || t.includes("tech") || t.includes("silicon") || t.includes("apple") || t.includes("google") || t.includes("chatgpt") || t.includes("software") || t.includes("phone")) return "TECHNOLOGY";
+        if (t.includes("market") || t.includes("stock") || t.includes("gold") || t.includes("business") || t.includes("money") || t.includes("economy") || t.includes("billion")) return "BUSINESS";
+        if (t.includes("biden") || t.includes("trump") || t.includes("election") || t.includes("politics") || t.includes("government") || t.includes("white house")) return "POLITICS";
+        if (t.includes("science") || t.includes("space") || t.includes("nasa") || t.includes("mars") || t.includes("earth")) return "SCIENCE";
+        if (t.includes("health") || t.includes("virus") || t.includes("doctor") || t.includes("medical") || t.includes("cancer")) return "HEALTH";
+        if (t.includes("u.s.") || t.includes("america") || t.includes("washington")) return "US";
+        return "WORLD"; // Mặc định trả về World
       }
 
       function switchCategory(cat) {
@@ -239,21 +243,33 @@
         let timeLeft = 3;
         btn.innerText = timeLeft;
 
-        container.innerHTML = "";
+        // XỬ LÝ QUẢNG CÁO TRẮNG TINH: Ép luồng chèn mã bảo mật HTTPS qua Iframe nội bộ sạch
+        container.innerHTML = '<iframe id="ad-iframe" width="300" height="250" frameborder="0" scrolling="no" src="about:blank"></iframe>';
         
-        // Nhúng code cấu hình Adsterra trực tiếp loại bỏ hoàn toàn lỗi trang trắng
-        window.atOptions = {
-          'key' : '29716204',
-          'format' : 'iframe',
-          'height' : 250,
-          'width' : 300,
-          'params' : {}
-        };
-        
-        const scriptNode = document.createElement('script');
-        scriptNode.type = 'text/javascript';
-        scriptNode.src = '//www.highperformanceformat.com/29716204/invoke.js';
-        container.appendChild(scriptNode);
+        setTimeout(() => {
+          const iframe = document.getElementById("ad-iframe");
+          if (iframe) {
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+              <html>
+                <body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:#f9f9f9;">
+                  <script type="text/javascript">
+                    atOptions = {
+                      'key' : '29716204',
+                      'format' : 'iframe',
+                      'height' : 250,
+                      'width' : 300,
+                      'params' : {}
+                    };
+                  <\/script>
+                  <script type="text/javascript" src="https://www.highperformanceformat.com/29716204/invoke.js"><\/script>
+                </body>
+              </html>
+            `);
+            doc.close();
+          }
+        }, 150);
 
         clearInterval(countdownTimer);
         countdownTimer = setInterval(() => {
@@ -311,14 +327,11 @@
       function renderGlobalMagazineLayout() {
         if(allPosts.length === 0) return;
 
-        // Lọc bài viết và áp dụng AI tự động quét phân mục thông minh
+        // Thực hiện lọc danh mục phối hợp quét AI từ khóa tự động đầu ra
         let filteredPosts = allPosts.filter(post => {
           const matchedCat = guessCategory(post.title, post.category);
           
-          // Lọc theo Category Menu
           if (currentCategory !== "ALL" && matchedCat !== currentCategory) return false;
-          
-          // Lọc theo Từ khóa tìm kiếm
           if (searchQuery !== "" && !post.title.toLowerCase().includes(searchQuery)) return false;
           
           return true;
@@ -331,7 +344,7 @@
           magazineBlock.style.display = "block";
           trendingTitleFixed.style.display = "block";
 
-          // SỬA LỖI TRUYỀN ID CHUẨN XÁC CHO HERO BLOCK
+          // SỬA DỨT ĐIỂM LỖI NHẢY BÀI: Trích xuất chính xác chuỗi ID đã ánh xạ của từng thẻ khối Hero
           const heroPost = allPosts[0];
           const heroImg = heroPost.image_url ? `<div class="hero-img-wrapper"><img src="${heroPost.image_url}" onclick="readArticle('${heroPost.id}')"></div>` : "";
           document.getElementById("hero-block").innerHTML = `
@@ -341,7 +354,7 @@
             <p class="hero-excerpt">${heroPost.excerpt}</p>
           `;
 
-          // SỬA LỖI TRUYỀN ID CHUẨN XÁC CHO SUB FEATURES BLOCK
+          // Trích xuất chính xác ID cho khối Sub Features
           const subPosts = allPosts.slice(1, 4);
           let subHtml = "";
           subPosts.forEach(post => {
@@ -355,7 +368,7 @@
           });
           document.getElementById("sub-features-block").innerHTML = subHtml;
 
-          // SỬA LỖI TRUYỀN ID CHUẨN XÁC CHO TRENDING STORIES
+          // Trích xuất chính xác ID cho khối Trending Stories
           let trendingPosts = allPosts.slice(0, 5);
           let trendHtml = "";
           trendingPosts.forEach((post, index) => {
@@ -370,7 +383,7 @@
           });
           document.getElementById("trending-block").innerHTML = trendHtml;
 
-          // SỬA LỖI TRUYỀN ID CHUẨN XÁC CHO STREAM GRID BLOCK
+          // Trích xuất chính xác ID cho khối Lưới tin mở rộng More News dưới cùng
           const streamPosts = allPosts.slice(4);
           let streamHtml = "";
           const displayPosts = streamPosts.length > 0 ? streamPosts : allPosts;
@@ -416,16 +429,21 @@
           if (error) throw error;
 
           if (rows) {
-            allPosts = rows.map((row) => {
+            allPosts = rows.map((row, index) => {
+              // SỬA LỖI ĐỊNH DANH: Quét động tự động dò tìm cột khóa chính hoa/thường, lỗi thì dùng index làm cứu cánh
+              let detectedId = index;
+              if (row.id !== undefined && row.id !== null) detectedId = row.id;
+              else if (row.ID !== undefined && row.ID !== null) detectedId = row.ID;
+
               return {
-                id: String(row.id), 
+                id: String(detectedId), 
                 title: row.title || "Untitled",
                 author: row.author || "Lê Duy Bách",
                 excerpt: extractTextFromHTML(row.content),
                 content: row.content || "",
                 image_url: row.image_url || "",
                 affiliate_url: row.affiliate_url || "",
-                category: row.category || "WORLD"
+                category: row.category || "" // ĐỂ TRỐNG ĐỂ AI BỘ LỌC QUÉT TỪ KHÓA CHẠY ĐÚNG
               };
             });
             allPosts.sort((a, b) => Number(b.id) - Number(a.id)); 
