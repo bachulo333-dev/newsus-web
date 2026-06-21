@@ -35,7 +35,7 @@
     </div>
 
     <div class="form-group">
-        <label>Section (Chọn phân loại danh mục cho bài viết)</label>
+        <label>Section (Chọn phân loại danh mục)</label>
         <select id="post-category">
             <option value="WORLD">World</option>
             <option value="US">U.S.</option>
@@ -48,8 +48,8 @@
     </div>
     
     <div class="form-group">
-        <label>Cover Image (Tải ảnh đại diện lên trực tiếp)</label>
-        <input type="file" id="post-image-file" accept="image/*" onchange="previewAndCompressImage(this)">
+        <label>Cover Image (Tải trực tiếp file ảnh từ máy)</label>
+        <input type="file" id="post-image-file" accept="image/*" onchange="handleImagePreview(this)">
         <img id="image-preview-element" class="image-preview">
     </div>
 
@@ -77,7 +77,7 @@
                 ['bold', 'italic', 'underline', 'strike'],
                 ['blockquote', 'code-block'],
                 [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['link', 'image'],
+                ['link'],
                 ['clean']
             ]
         },
@@ -88,43 +88,22 @@
     const SB_KEY = "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    let base64ImageData = "";
+    let selectedImageFile = null;
 
-    function previewAndCompressImage(input) {
+    function handleImagePreview(input) {
         const file = input.files[0];
         const preview = document.getElementById("image-preview-element");
         
         if (file) {
+            selectedImageFile = file;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Nén nhỏ chiều rộng ảnh xuống 640px để giảm tải dữ liệu tối đa cho database
-                    const maxW = 640;
-                    const scale = maxW / img.width;
-                    
-                    if (img.width > maxW) {
-                        canvas.width = maxW;
-                        canvas.height = img.height * scale;
-                    } else {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                    }
-                    
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    // Giảm chất lượng ảnh xuống 0.6 để chuỗi text cực ngắn và nhẹ
-                    base64ImageData = canvas.toDataURL('image/jpeg', 0.6);
-                    preview.src = base64ImageData;
-                    preview.style.display = "block";
-                }
+                preview.src = e.target.result;
+                preview.style.display = "block";
             }
             reader.readAsDataURL(file);
         } else {
-            base64ImageData = "";
+            selectedImageFile = null;
             preview.src = "";
             preview.style.display = "none";
         }
@@ -138,44 +117,67 @@
         const publishBtn = document.getElementById("publish-btn");
 
         if(!title || !content) {
-            alert("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết!");
+            alert("Vui lòng nhập đầy đủ tiêu đề và nội dung!");
             return;
         }
 
         try {
             publishBtn.disabled = true;
-            publishBtn.innerText = "Publishing to Network Engine...";
+            publishBtn.innerText = "Uploading media asset...";
 
-            // Thực hiện đóng gói dữ liệu an toàn
-            const payload = { 
-                title: title, 
-                image_url: base64ImageData ? base64ImageData.trim() : "", 
-                content: content,
-                author: "Lê Duy Bách",
-                affiliate_url: affiliate_url ? affiliate_url.trim() : "https://s.shopee.vn/1gG0ShTYxL",
-                category: category
-            };
+            let finalImageUrl = "";
 
+            // Nếu người dùng có chọn file ảnh, tiến hành tải lên kho Storage
+            if (selectedImageFile) {
+                // Tạo tên file ngẫu nhiên để không bị trùng lặp trên hệ thống đám mây
+                const fileExt = selectedImageFile.name.split('.').pop();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                
+                const { data: uploadData, error: uploadError } = await supabaseClient
+                    .storage
+                    .from('news-images')
+                    .upload(fileName, selectedImageFile);
+
+                if (uploadError) throw new Error("Lỗi tải ảnh lên Storage: " + uploadError.message);
+
+                // Lấy URL công khai của file ảnh vừa tải lên thành công
+                const { data: publicUrlData } = supabaseClient
+                    .storage
+                    .from('news-images')
+                    .getPublicUrl(fileName);
+
+                finalImageUrl = publicUrlData.publicUrl;
+            }
+
+            publishBtn.innerText = "Syncing database data...";
+
+            // Lưu thông tin bài viết vào bảng post cùng đường link ảnh cực kỳ sạch
             const { data, error } = await supabaseClient
                 .from('post')
-                .insert([payload])
-                .select();
+                .insert([
+                    { 
+                        title: title, 
+                        image_url: finalImageUrl, 
+                        content: content,
+                        author: "Lê Duy Bách",
+                        affiliate_url: affiliate_url,
+                        category: category
+                    }
+                ]);
 
-            if (error) {
-                console.error("Supabase Error Details:", error);
-                throw new Error(error.message + " (Code: " + error.code + ")");
-            }
+            if (error) throw error;
             
-            alert("Đã xuất bản thành công bài viết lên danh mục " + category + "!");
+            alert("Xuất bản thành công tin tức lên toàn hệ thống!");
             
-            // Dọn dẹp form sau khi đăng thành công
+            // Dọn form
             document.getElementById("post-title").value = "";
             document.getElementById("post-image-file").value = "";
             document.getElementById("image-preview-element").style.display = "none";
-            base64ImageData = "";
+            selectedImageFile = null;
             quill.setContents([]);
+
         } catch (err) {
-            alert("Hệ thống báo lỗi dữ liệu: " + err.message + "\n\n-> Hãy kiểm tra xem bạn đã chạy lệnh SQL tắt RLS ở Bước 1 chưa.");
+            alert("Hệ thống nghẽn: " + err.message);
         } finally {
             publishBtn.disabled = false;
             publishBtn.innerText = "Publish to Global Stream";
