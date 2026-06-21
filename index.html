@@ -92,7 +92,7 @@
       .ad-box { background: white; width: 320px; padding: 15px; border-radius: 6px; position: relative; text-align: center; box-shadow: 0 10px 35px rgba(0,0,0,0.5); }
       .close-ad-btn { position: absolute; top: -12px; right: -12px; background: var(--color-dark); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
       .close-ad-btn:disabled { background: #666; cursor: not-allowed; color: #ccc; }
-      #adsterra-banner-container { min-height: 250px; display: flex; justify-content: center; align-items: center; background: #f0f0f0; margin-top: 5px; border-radius: 4px; overflow: hidden; }
+      #adsterra-banner-container { min-height: 250px; display: flex; justify-content: center; align-items: center; background: #ffffff; margin-top: 5px; border-radius: 4px; overflow: hidden; }
     </style>
   </head>
   <body>
@@ -239,35 +239,15 @@
 
         container.innerHTML = "";
 
-        // BLOB URL: KHắc phục 100% lỗi quảng cáo trắng tinh, Adsterra sẽ hoạt động và đếm view chuẩn
-        const adHtmlContent = `
-          <!DOCTYPE html>
-          <html>
-            <head><meta charset="utf-8"></head>
-            <body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:#f0f0f0;">
-              <script type="text/javascript">
-                atOptions = {
-                  'key' : '29716204',
-                  'format' : 'iframe',
-                  'height' : 250,
-                  'width' : 300,
-                  'params' : {}
-                };
-              </scr` + `ipt>
-              <script type="text/javascript" src="https://www.highperformanceformat.com/29716204/invoke.js"></scr` + `ipt>
-            </body>
-          </html>
-        `;
-
-        const blob = new Blob([adHtmlContent], { type: 'text/html' });
-        const blobUrl = URL.createObjectURL(blob);
-
+        // GIẢI PHÁP ĐỘC LẬP: Gọi file ad.html vật lý cùng nguồn, đếm impression chuẩn 100% không lo lỗi trắng
         const iframe = document.createElement("iframe");
         iframe.width = "300";
         iframe.height = "250";
         iframe.frameBorder = "0";
         iframe.scrolling = "no";
-        iframe.src = blobUrl;
+        iframe.src = "ad.html"; // Trỏ thẳng đến file ad.html trên host GitHub Pages
+        iframe.style.border = "none";
+        iframe.style.background = "#ffffff";
         
         container.appendChild(iframe);
 
