@@ -7,7 +7,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght=0,600;0,800;1,400&family=Inter:wght=400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght=0,600;0,800;1,400&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -87,12 +87,12 @@
       .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-accent); letter-spacing: 0.5px; display: inline-block; margin-bottom: 5px; }
       footer { background-color: #fafafa; border-top: 1px solid var(--color-border); padding: 40px 20px; text-align: center; font-size: 11px; color: var(--color-muted); margin-top: 60px; letter-spacing: 0.5px; }
 
-      #interstitial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); z-index: 999999; display: flex; justify-content: center; align-items: center; }
-      .ad-box { background: white; width: 320px; padding: 20px; border-radius: 6px; position: relative; text-align: center; box-shadow: 0 10px 35px rgba(0,0,0,0.4); }
-      .close-ad-btn { position: absolute; top: -12px; right: -12px; background: var(--color-dark); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+      /* Giao diện khung quảng cáo Adsterra chuẩn */
+      #interstitial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 999999; display: flex; justify-content: center; align-items: center; }
+      .ad-box { background: white; width: 320px; padding: 15px; border-radius: 6px; position: relative; text-align: center; box-shadow: 0 10px 35px rgba(0,0,0,0.5); }
+      .close-ad-btn { position: absolute; top: -12px; right: -12px; background: var(--color-dark); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
       .close-ad-btn:disabled { background: #666; cursor: not-allowed; color: #ccc; }
-      
-      #adsterra-banner-container { min-height: 250px; display: flex; justify-content: center; align-items: center; background: #f9f9f9; margin-top: 8px; border: 1px dashed #ccc; }
+      #adsterra-banner-container { min-height: 250px; display: flex; justify-content: center; align-items: center; background: #f0f0f0; margin-top: 5px; border-radius: 4px; overflow: hidden; }
     </style>
   </head>
   <body>
@@ -152,6 +152,7 @@
       <p>© 2026 FREE NEWS US NETWORK. ALL RIGHTS RESERVED. HIGH-FIDELITY NEWSROOM TRANSMISSION.</p>
     </footer>
 
+    <!-- Khung Adsterra Banner Cấu trúc chuẩn xác -->
     <div id="interstitial-overlay" class="hidden">
       <div class="ad-box">
         <button id="close-ad-btn" class="close-ad-btn" onclick="closeAdOverlay()" disabled>3</button>
@@ -172,23 +173,20 @@
 
       document.getElementById("live-date").innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-      // HÀM AI TỰ ĐỘNG PHÂN LOẠI DANH MỤC PHỤC HỒI CHUẨN XÁC
+      // Hàm AI ĐỘC LẬP TỰ ĐỘNG PHÂN LOẠI
       function guessCategory(title, storedCat) {
         const cleanCat = String(storedCat || "").trim().toUpperCase();
-        // Nếu bài viết đã được chọn danh mục chuẩn từ trước (và không phải nhãn NEWS chung), giữ nguyên danh mục đó
         if (cleanCat !== "" && cleanCat !== "NEWS" && cleanCat !== "NULL" && cleanCat !== "UNDEFINED") {
           return cleanCat;
         }
-        
-        // Tiến hành AI tự động quét từ khóa tiêu đề nếu bài viết chưa phân mục
         const t = String(title || "").toLowerCase();
-        if (t.includes("ai") || t.includes("tech") || t.includes("silicon") || t.includes("apple") || t.includes("google") || t.includes("chatgpt") || t.includes("software") || t.includes("phone")) return "TECHNOLOGY";
-        if (t.includes("market") || t.includes("stock") || t.includes("gold") || t.includes("business") || t.includes("money") || t.includes("economy") || t.includes("billion")) return "BUSINESS";
-        if (t.includes("biden") || t.includes("trump") || t.includes("election") || t.includes("politics") || t.includes("government") || t.includes("white house")) return "POLITICS";
-        if (t.includes("science") || t.includes("space") || t.includes("nasa") || t.includes("mars") || t.includes("earth")) return "SCIENCE";
-        if (t.includes("health") || t.includes("virus") || t.includes("doctor") || t.includes("medical") || t.includes("cancer")) return "HEALTH";
+        if (t.includes("ai") || t.includes("tech") || t.includes("apple") || t.includes("google") || t.includes("software")) return "TECHNOLOGY";
+        if (t.includes("market") || t.includes("stock") || t.includes("gold") || t.includes("business") || t.includes("economy")) return "BUSINESS";
+        if (t.includes("biden") || t.includes("trump") || t.includes("election") || t.includes("politics") || t.includes("government")) return "POLITICS";
+        if (t.includes("science") || t.includes("space") || t.includes("nasa") || t.includes("mars")) return "SCIENCE";
+        if (t.includes("health") || t.includes("virus") || t.includes("doctor") || t.includes("medical")) return "HEALTH";
         if (t.includes("u.s.") || t.includes("america") || t.includes("washington")) return "US";
-        return "WORLD"; // Mặc định trả về World
+        return "WORLD"; 
       }
 
       function switchCategory(cat) {
@@ -203,9 +201,6 @@
         document.getElementById("article-view").classList.add("hidden");
         document.getElementById("home-view").classList.remove("hidden");
         window.scrollTo(0, 0);
-
-        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-        window.history.pushState({path:cleanUrl},'',cleanUrl);
 
         renderGlobalMagazineLayout();
       }
@@ -223,12 +218,13 @@
 
         pendingArticleId = String(id); 
 
+        // Rút link Shopee chuẩn xác
         let targetAffiliate = "https://s.shopee.vn/4fu2COK7Or";
         if (article.affiliate_url && article.affiliate_url.trim() !== "" && article.affiliate_url !== "https://s.shopee.vn/1gG0ShTYxL") {
             targetAffiliate = article.affiliate_url.trim();
         }
-        
         window.open(targetAffiliate, '_blank');
+        
         startInterstitialAd();
       }
 
@@ -243,33 +239,26 @@
         let timeLeft = 3;
         btn.innerText = timeLeft;
 
-        // XỬ LÝ QUẢNG CÁO TRẮNG TINH: Ép luồng chèn mã bảo mật HTTPS qua Iframe nội bộ sạch
-        container.innerHTML = '<iframe id="ad-iframe" width="300" height="250" frameborder="0" scrolling="no" src="about:blank"></iframe>';
+        // XÓA LỖI QUẢNG CÁO TRẮNG: Nhúng thẳng script của Adsterra vào DIV thay vì Iframe
+        container.innerHTML = "";
         
-        setTimeout(() => {
-          const iframe = document.getElementById("ad-iframe");
-          if (iframe) {
-            const doc = iframe.contentWindow.document;
-            doc.open();
-            doc.write(`
-              <html>
-                <body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:#f9f9f9;">
-                  <script type="text/javascript">
-                    atOptions = {
-                      'key' : '29716204',
-                      'format' : 'iframe',
-                      'height' : 250,
-                      'width' : 300,
-                      'params' : {}
-                    };
-                  <\/script>
-                  <script type="text/javascript" src="https://www.highperformanceformat.com/29716204/invoke.js"><\/script>
-                </body>
-              </html>
-            `);
-            doc.close();
-          }
-        }, 150);
+        const confScript = document.createElement("script");
+        confScript.type = "text/javascript";
+        confScript.innerHTML = `
+            atOptions = {
+                'key' : '29716204',
+                'format' : 'iframe',
+                'height' : 250,
+                'width' : 300,
+                'params' : {}
+            };
+        `;
+        container.appendChild(confScript);
+
+        const invokeScript = document.createElement("script");
+        invokeScript.type = "text/javascript";
+        invokeScript.src = "//www.highperformanceformat.com/29716204/invoke.js";
+        container.appendChild(invokeScript);
 
         clearInterval(countdownTimer);
         countdownTimer = setInterval(() => {
@@ -300,9 +289,6 @@
         document.getElementById("article-view").classList.remove("hidden");
         window.scrollTo(0, 0);
 
-        const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
-        window.history.pushState({path:newurl},'',newurl);
-
         document.getElementById("article-title").innerText = article.title;
         document.getElementById("article-meta").innerText = `By ${article.author}  |  Published in Newsroom`;
         
@@ -327,13 +313,9 @@
       function renderGlobalMagazineLayout() {
         if(allPosts.length === 0) return;
 
-        // Thực hiện lọc danh mục phối hợp quét AI từ khóa tự động đầu ra
         let filteredPosts = allPosts.filter(post => {
-          const matchedCat = guessCategory(post.title, post.category);
-          
-          if (currentCategory !== "ALL" && matchedCat !== currentCategory) return false;
+          if (currentCategory !== "ALL" && post.category !== currentCategory) return false;
           if (searchQuery !== "" && !post.title.toLowerCase().includes(searchQuery)) return false;
-          
           return true;
         });
 
@@ -344,23 +326,21 @@
           magazineBlock.style.display = "block";
           trendingTitleFixed.style.display = "block";
 
-          // SỬA DỨT ĐIỂM LỖI NHẢY BÀI: Trích xuất chính xác chuỗi ID đã ánh xạ của từng thẻ khối Hero
           const heroPost = allPosts[0];
           const heroImg = heroPost.image_url ? `<div class="hero-img-wrapper"><img src="${heroPost.image_url}" onclick="readArticle('${heroPost.id}')"></div>` : "";
           document.getElementById("hero-block").innerHTML = `
             ${heroImg}
-            <span class="tag" style="margin-top:12px;">${guessCategory(heroPost.title, heroPost.category)}</span>
+            <span class="tag" style="margin-top:12px;">${heroPost.category}</span>
             <h2 class="hero-title"><a onclick="readArticle('${heroPost.id}')">${heroPost.title}</a></h2>
             <p class="hero-excerpt">${heroPost.excerpt}</p>
           `;
 
-          // Trích xuất chính xác ID cho khối Sub Features
           const subPosts = allPosts.slice(1, 4);
           let subHtml = "";
           subPosts.forEach(post => {
             subHtml += `
               <div class="sub-card">
-                <span class="tag">${guessCategory(post.title, post.category)}</span>
+                <span class="tag">${post.category}</span>
                 <h3 class="sub-card-title"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
                 <p class="sub-card-excerpt">${post.excerpt}</p>
               </div>
@@ -368,7 +348,6 @@
           });
           document.getElementById("sub-features-block").innerHTML = subHtml;
 
-          // Trích xuất chính xác ID cho khối Trending Stories
           let trendingPosts = allPosts.slice(0, 5);
           let trendHtml = "";
           trendingPosts.forEach((post, index) => {
@@ -383,7 +362,6 @@
           });
           document.getElementById("trending-block").innerHTML = trendHtml;
 
-          // Trích xuất chính xác ID cho khối Lưới tin mở rộng More News dưới cùng
           const streamPosts = allPosts.slice(4);
           let streamHtml = "";
           const displayPosts = streamPosts.length > 0 ? streamPosts : allPosts;
@@ -425,37 +403,30 @@
 
       async function loadDataFromSupabase() {
         try {
-          const { data: rows, error } = await supabaseClient.from('post').select('*');
+          // Bắt Supabase tự động sắp xếp theo thời gian bài đăng chuẩn 100% để loại bỏ lỗi sắp xếp ID bằng số
+          const { data: rows, error } = await supabaseClient.from('post').select('*').order('created_at', { ascending: false });
           if (error) throw error;
 
           if (rows) {
-            allPosts = rows.map((row, index) => {
-              // SỬA LỖI ĐỊNH DANH: Quét động tự động dò tìm cột khóa chính hoa/thường, lỗi thì dùng index làm cứu cánh
-              let detectedId = index;
-              if (row.id !== undefined && row.id !== null) detectedId = row.id;
-              else if (row.ID !== undefined && row.ID !== null) detectedId = row.ID;
+            allPosts = rows.map((row) => {
+              const rawCat = row.category ? String(row.category) : "";
+              const finalCat = guessCategory(row.title, rawCat); // Ép AI chạy lọc danh mục ngay từ lúc load data
 
               return {
-                id: String(detectedId), 
+                id: String(row.id), 
                 title: row.title || "Untitled",
                 author: row.author || "Lê Duy Bách",
                 excerpt: extractTextFromHTML(row.content),
                 content: row.content || "",
                 image_url: row.image_url || "",
                 affiliate_url: row.affiliate_url || "",
-                category: row.category || "" // ĐỂ TRỐNG ĐỂ AI BỘ LỌC QUÉT TỪ KHÓA CHẠY ĐÚNG
+                category: finalCat 
               };
             });
-            allPosts.sort((a, b) => Number(b.id) - Number(a.id)); 
           }
 
           renderGlobalMagazineLayout();
 
-          const urlParams = new URLSearchParams(window.location.search);
-          const postId = urlParams.get('id');
-          if (postId !== null) {
-              executeRenderArticleContent(postId); 
-          }
         } catch (err) {
           console.error("System error:", err);
         }
