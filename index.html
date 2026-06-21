@@ -3,101 +3,176 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NEWS - Tin tức tổng hợp</title>
+    <title>FREE NEWS US - World-Class Breaking News & Narratives</title>
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0FR9WGXCTX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-0FR9WGXCTX');
-    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght=0,600;0,800;1,400&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
-      body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
-      a { text-decoration: none; cursor: pointer; color: #333; }
-      a:hover { text-decoration: underline; }
-      .container { max-width: 900px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); }
+      :root {
+        --font-serif-heading: 'Playfair Display', Georgia, serif;
+        --font-sans: 'Inter', system-ui, sans-serif;
+        --font-logo: 'Cinzel', serif;
+        --color-dark: #111111;
+        --color-muted: #666666;
+        --color-border: #dddddd;
+        --color-accent: #c00000;
+      }
+      
+      body { font-family: var(--font-sans); line-height: 1.5; margin: 0; padding: 0; background-color: #ffffff; color: var(--color-dark); }
+      a { text-decoration: none; color: inherit; cursor: pointer; }
+      a:hover { color: var(--color-accent); }
       .hidden { display: none !important; }
-      header { background-color: #fff; border-bottom: 2px solid #eaeaea; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-      .logo { font-size: 24px; font-weight: bold; color: #000; cursor: pointer; }
-      nav ul { list-style: none; padding: 0; margin: 0; display: flex; gap: 20px; flex-wrap: wrap; }
-      nav ul li a { font-weight: bold; font-size: 15px; text-transform: uppercase; }
-      .category-title { font-size: 28px; text-transform: uppercase; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 30px; font-weight: 900; }
-      .post { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
-      .post-title { font-size: 24px; font-weight: bold; margin: 0 0 10px; color: #111; line-height: 1.3; cursor: pointer; }
-      .post-meta { font-size: 14px; color: #777; margin-bottom: 15px; font-weight: bold; }
-      .post-excerpt { font-size: 16px; margin-bottom: 15px; color: #444; }
-      .continue-reading { font-weight: bold; color: #d32f2f; font-size: 15px; }
-      .article-title { font-size: 32px; font-weight: 900; margin-bottom: 10px; color: #111; line-height: 1.3; }
-      .article-meta { font-size: 14px; color: #777; margin-bottom: 30px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-      .article-content { font-size: 18px; color: #222; line-height: 1.8; }
-      footer { background-color: #111; color: #fff; padding: 50px 5% 20px; margin-top: 50px; }
-      .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 30px; margin-bottom: 40px; }
-      .footer-grid h6 { font-size: 18px; margin: 0 0 15px; text-transform: uppercase; border-bottom: 2px solid #444; padding-bottom: 5px; }
-      .footer-grid ul { list-style: none; padding: 0; margin: 0; }
-      .footer-grid ul li { margin-bottom: 8px; }
-      .footer-grid ul li a { color: #ccc; font-size: 14px; }
-      .copyright { text-align: center; font-size: 13px; color: #777; border-top: 1px solid #333; padding-top: 20px; }
+
+      /* GLOBAL HEADER (GIỐNG THE NEW YORK TIMES) */
+      header { border-bottom: 1px solid var(--color-dark); padding: 15px 4%; background: #fff; text-align: center; }
+      .top-meta-bar { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-muted); margin-bottom: 10px; font-weight: 500; }
+      .logo { font-family: var(--font-logo); font-size: 48px; font-weight: 900; letter-spacing: -2px; margin: 5px 0 15px; cursor: pointer; line-height: 1; }
+      
+      nav { border-top: 1px solid var(--color-border); border-bottom: 4px double var(--color-dark); padding: 8px 0; }
+      nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+      nav ul li a { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+      /* CONTAINER CHÍNH */
+      .main-container { max-width: 1340px; margin: 25px auto; padding: 0 25px; box-sizing: border-box; }
+
+      /* LƯỚI ĐA TẦNG TRANG CHỦ (DYNAMIC MULTI-GRID) */
+      .homepage-layout { display: grid; grid-template-columns: 3fr 1.8fr 1.2fr; gap: 25px; border-bottom: 1px solid var(--color-border); padding-bottom: 30px; }
+      @media (max-width: 1024px) { .homepage-layout { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 768px) { .homepage-layout { grid-template-columns: 1fr; } }
+
+      /* Cột 1: Bài Tiêu Điểm Siêu Lớn */
+      .main-hero { border-right: 1px solid var(--color-border); padding-right: 25px; }
+      @media (max-width: 1024px) { .main-hero { border-right: none; padding-right: 0; grid-column: span 2; } }
+      @media (max-width: 768px) { .main-hero { grid-column: span 1; } }
+      .hero-img-wrapper img { width: 100%; max-height: 460px; object-fit: cover; cursor: pointer; border-radius: 2px; }
+      .hero-title { font-family: var(--font-serif-heading); font-size: 38px; font-weight: 800; line-height: 1.15; margin: 15px 0 12px; letter-spacing: -0.5px; }
+      .hero-excerpt { font-size: 15px; color: var(--color-muted); margin: 0 0 15px; line-height: 1.6; }
+
+      /* Cột 2: Các bài Tiêu Điểm Phụ */
+      .sub-features { border-right: 1px solid var(--color-border); padding-right: 25px; display: flex; flex-direction: column; gap: 20px; }
+      @media (max-width: 1024px) { .sub-features { border-right: none; padding-right: 0; } }
+      .sub-card { border-bottom: 1px solid #eee; padding-bottom: 20px; }
+      .sub-card:last-child { border-bottom: none; padding-bottom: 0; }
+      .sub-card-title { font-family: var(--font-serif-heading); font-size: 20px; font-weight: 700; line-height: 1.3; margin: 5px 0 8px; }
+      .sub-card-excerpt { font-size: 13px; color: var(--color-muted); margin: 0; }
+
+      /* Cột 3: Cột Xu Hướng Tốc Độ (Trending) */
+      .trending-panel { display: flex; flex-direction: column; gap: 15px; }
+      @media (max-width: 1024px) { .trending-panel { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--color-border); padding-top: 20px; } }
+      @media (max-width: 768px) { .trending-panel { grid-column: span 1; grid-template-columns: 1fr; } }
+      .panel-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--color-dark); padding-bottom: 4px; margin-bottom: 10px; display: block; }
+      .trending-row { display: flex; gap: 15px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; align-items: flex-start; }
+      .trending-num { font-family: var(--font-serif-heading); font-size: 26px; font-weight: 800; color: #ccc; line-height: 1; }
+      .trending-text { font-family: var(--font-serif-heading); font-size: 14px; font-weight: 700; margin: 0; line-height: 1.3; }
+
+      /* KHỐI CHUYÊN MỤC DỌC (CATEGORY SECTION ROWS) */
+      .category-row-block { margin-top: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--color-border); }
+      .row-block-header { border-bottom: 1px solid var(--color-dark); padding-bottom: 5px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+      .row-block-header h2 { font-family: var(--font-logo); font-size: 20px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+      .row-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+      @media (max-width: 900px) { .row-grid { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 480px) { .row-grid { grid-template-columns: 1fr; } }
+      
+      .grid-card img { width: 100%; height: 140px; object-fit: cover; border-radius: 2px; }
+      .grid-card-title { font-family: var(--font-serif-heading); font-size: 16px; font-weight: 700; margin: 10px 0 5px; line-height: 1.3; }
+
+      /* GIAO DIỆN XEM BÀI VIẾT (PREMIUM READ VIEW) */
+      .article-view { max-width: 680px; margin: 40px auto; padding: 0 15px; }
+      .article-title { font-family: var(--font-serif-heading); font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 15px; letter-spacing: -0.5px; }
+      .article-meta { font-size: 12px; text-transform: uppercase; color: var(--color-muted); letter-spacing: 0.5px; border-bottom: 1px solid var(--color-border); padding-bottom: 15px; margin-bottom: 30px; font-weight: 600; }
+      .article-content { font-family: var(--font-sans); font-size: 18px; line-height: 1.85; color: #222; }
+      .article-content p { margin-bottom: 24px; }
+
+      /* TAG CHUYÊN MỤC NHỎ */
+      .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-accent); letter-spacing: 0.5px; display: inline-block; margin-bottom: 5px; }
+
+      footer { background-color: #fafafa; border-top: 1px solid var(--color-border); padding: 40px 20px; text-align: center; font-size: 11px; color: var(--color-muted); margin-top: 60px; letter-spacing: 0.5px; }
+
+      /* OVERLAY AD BOX SETUP */
+      #interstitial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 999999; display: flex; justify-content: center; align-items: center; }
+      .ad-box { background: white; width: 92%; max-width: 620px; padding: 20px; border-radius: 4px; position: relative; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+      .close-ad-btn { position: absolute; top: -15px; right: -15px; background: var(--color-dark); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; justify-content: center; align-items: center; }
+      .close-ad-btn:disabled { background: #777; cursor: not-allowed; }
     </style>
   </head>
   <body>
+
     <header>
-      <div class="logo" onclick="goHome()">NEWS</div>
+      <div class="top-meta-bar" id="live-date">GLOBAL NARRATIVE REPOSITORY</div>
+      <div class="logo" onclick="goHome()">FREE NEWS US</div>
       <nav>
         <ul>
           <li><a onclick="goHome()">Home</a></li>
-          <li><a onclick="loadPostList('TRUE_CRIME')">True Crime</a></li>
-          <li><a onclick="loadPostList('WEIRD_HISTORY')">Weird History</a></li>
-          <li><a onclick="loadPostList('POP_CULTURE')">Pop Culture</a></li>
-          <li><a onclick="loadPostList('WHAT_IF')">What If</a></li>
-          <li><a onclick="loadPostList('PSYCHOLOGY')">Psychology</a></li>
+          <li><a onclick="loadCategoryView('TRUE_CRIME')">True Crime</a></li>
+          <li><a onclick="loadCategoryView('WEIRD_HISTORY')">Weird History</a></li>
+          <li><a onclick="loadCategoryView('POP_CULTURE')">Pop Culture</a></li>
+          <li><a onclick="loadCategoryView('WHAT_IF')">What If</a></li>
+          <li><a onclick="loadCategoryView('PSYCHOLOGY')">Psychology</a></li>
         </ul>
       </nav>
     </header>
 
-    <div id="home-view" class="container">
-      <h1 id="main-category-title" class="category-title">LATEST NEWS</h1>
-      <div id="post-list-container">
-        <p>Đang tải dữ liệu siêu tốc từ máy chủ...</p>
-      </div>
-    </div>
+    <div class="main-container">
+      
+      <!-- VIEW TRANG CHỦ MỚI CHUẨN CÁC ÔNG LỚN -->
+      <div id="home-view">
+        <div class="homepage-layout">
+          <!-- Cột chính: Bài viết đặc biệt siêu lớn -->
+          <div class="main-hero" id="hero-block"></div>
+          
+          <!-- Cột phụ: Danh sách bài viết mới tiêu điểm -->
+          <div class="sub-features" id="sub-features-block"></div>
+          
+          <!-- Cột 3: Xu hướng thời gian thực -->
+          <div class="trending-panel">
+            <span class="panel-section-title">Trending Stories</span>
+            <div id="trending-block"></div>
+          </div>
+        </div>
 
-    <div id="article-view" class="container hidden">
-      <h1 id="article-title" class="article-title"></h1>
-      <div id="article-meta" class="article-meta"></div>
-      <img id="article-thumb" style="width:100%; max-height:450px; object-fit:cover; border-radius:8px; margin-bottom:25px; display:none;">
-      <div id="article-content" class="article-content"></div>
+        <!-- Tách dòng hiển thị chuyên sâu đa dạng chuyên mục -->
+        <div id="category-rows-container"></div>
+      </div>
+
+      <!-- VIEW CHI TIẾT BÀI VIẾT -->
+      <div id="article-view" class="article-view hidden">
+        <h1 id="article-title" class="article-title"></h1>
+        <div id="article-meta" class="article-meta"></div>
+        <img id="article-thumb" style="width:100%; max-height:460px; object-fit:cover; margin-bottom:30px; border-radius:2px; display:none;">
+        <div id="article-content" class="article-content"></div>
+      </div>
+
     </div>
 
     <footer>
-      <div class="footer-grid">
-        <div>
-          <h6>Mysteries</h6>
-          <ul>
-            <li><a onclick="loadPostList('TRUE_CRIME')">True Crime</a></li>
-            <li><a onclick="loadPostList('WEIRD_HISTORY')">Weird History</a></li>
-          </ul>
-        </div>
-        <div>
-          <h6>Entertainment</h6>
-          <ul>
-            <li><a onclick="loadPostList('POP_CULTURE')">Pop Culture</a></li>
-          </ul>
-        </div>
-        <div>
-          <h6>Discover</h6>
-          <ul>
-            <li><a onclick="loadPostList('WHAT_IF')">What If</a></li>
-            <li><a onclick="loadPostList('PSYCHOLOGY')">Psychology</a></li>
-            <li><a onclick="goHome()">All News</a></li>
-          </ul>
+      <p>© 2026 FREE NEWS US NETWORK. ALL RIGHTS RESERVED. HIGH-FIDELITY NEWSROOM TRANSMISSION.</p>
+    </footer>
+
+    <!-- ADSTERRA AD OVERLAY BLOCK -->
+    <div id="interstitial-overlay" class="hidden">
+      <div class="ad-box">
+        <button id="close-ad-btn" class="close-ad-btn" onclick="triggerAffiliateBypass()">3</button>
+        <div style="font-size:10px; color:#aaa; letter-spacing:1px; margin-bottom:10px;">SPONSORED RESOURCING</div>
+        
+        <div style="min-height: 250px; display: flex; justify-content: center; align-items: center; background: #fafafa;">
+            <!-- MÃ BANNER ADSTERRA AT OPTIONS -->
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : '29716204',
+                    'format' : 'iframe',
+                    'height' : 250,
+                    'width' : 300,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="//www.highperformanceformat.com/29716204/invoke.js"></script>
         </div>
       </div>
-      <div class="copyright">© 2026 freenewsus.com – All Rights Reserved.</div>
-    </footer>
+    </div>
 
     <script>
       const SB_URL = "https://rcetkkjqllurishhgzfc.supabase.co";
@@ -105,32 +180,39 @@
       const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
       let allPosts = [];
+      let currentActiveAffiliateLink = "https://s.shopee.vn/1gG0ShTYxL";
+
+      document.getElementById("live-date").innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
       function goHome() {
         document.getElementById("article-view").classList.add("hidden");
         document.getElementById("home-view").classList.remove("hidden");
         window.scrollTo(0, 0);
-        
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.pushState({path:cleanUrl},'',cleanUrl);
-        
-        loadPostList('ALL');
+        renderGlobalMagazineLayout();
       }
 
       function readArticle(id) {
-        document.getElementById("home-view").classList.add("hidden");
-        document.getElementById("article-view").classList.remove("hidden");
-        window.scrollTo(0, 0);
-
-        const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
-        window.history.pushState({path:newurl},'',newurl);
-
         const article = allPosts.find((post) => post.id == id);
-
         if (article) {
+          if (article.affiliate_url && article.affiliate_url.trim() !== "") {
+              currentActiveAffiliateLink = article.affiliate_url;
+          } else {
+              currentActiveAffiliateLink = "https://s.shopee.vn/1gG0ShTYxL";
+          }
+
+          startInterstitialAd();
+
+          document.getElementById("home-view").classList.add("hidden");
+          document.getElementById("article-view").classList.remove("hidden");
+          window.scrollTo(0, 0);
+
+          const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
+          window.history.pushState({path:newurl},'',newurl);
+
           document.getElementById("article-title").innerText = article.title;
-          document.getElementById("article-meta").innerText =
-            article.author + " · " + article.date + " · Chuyên mục: " + article.category;
+          document.getElementById("article-meta").innerText = `By ${article.author}  |  Published in ${article.category.replace('_', ' ')}`;
           
           const thumbEl = document.getElementById("article-thumb");
           if (article.thumb) {
@@ -139,11 +221,34 @@
           } else {
             thumbEl.style.display = "none";
           }
-
-          document.getElementById("article-content").innerHTML = article.content.replace(/\n/g, '<br>'); 
-        } else {
-          document.getElementById("article-content").innerHTML = "<p>Không tìm thấy bài viết.</p>";
+          document.getElementById("article-content").innerHTML = article.content;
         }
+      }
+
+      let countdownTimer;
+      function startInterstitialAd() {
+        const overlay = document.getElementById("interstitial-overlay");
+        const btn = document.getElementById("close-ad-btn");
+        overlay.classList.remove("hidden");
+        btn.disabled = true;
+        let timeLeft = 3;
+        btn.innerText = timeLeft;
+
+        countdownTimer = setInterval(() => {
+          timeLeft--;
+          if (timeLeft <= 0) {
+            clearInterval(countdownTimer);
+            btn.disabled = false;
+            btn.innerText = "X";
+          } else {
+            btn.innerText = timeLeft;
+          }
+        }, 1000);
+      }
+
+      function triggerAffiliateBypass() {
+         window.open(currentActiveAffiliateLink, '_blank');
+         document.getElementById("interstitial-overlay").classList.add("hidden");
       }
 
       function extractTextFromHTML(html) {
@@ -151,106 +256,144 @@
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = html;
         const text = tempDiv.textContent || tempDiv.innerText || "";
-        return text.length > 200 ? text.substring(0, 200) + "..." : text;
+        return text.length > 140 ? text.substring(0, 140) + "..." : text;
       }
 
-      async function loadPostList(categoryFilter = 'ALL') {
-        try {
-          // XÓA LỆNH ORDER ĐỂ CHỐNG LỖI 400
-          const { data: rows, error } = await supabaseClient
-              .from('post')
-              .select('*');
+      function renderGlobalMagazineLayout() {
+        if(allPosts.length === 0) return;
 
+        const heroPost = allPosts[0];
+        const heroImg = heroPost.thumb ? `<div class="hero-img-wrapper"><img src="${heroPost.thumb}" onclick="readArticle('${heroPost.id}')"></div>` : "";
+        document.getElementById("hero-block").innerHTML = `
+          ${heroImg}
+          <span class="tag" style="margin-top:12px;">Top Story · ${heroPost.category.replace('_', ' ')}</span>
+          <h2 class="hero-title"><a onclick="readArticle('${heroPost.id}')">${heroPost.title}</a></h2>
+          <p class="hero-excerpt">${heroPost.excerpt}</p>
+        `;
+
+        const subPosts = allPosts.slice(1, 4);
+        let subHtml = "";
+        subPosts.forEach(post => {
+          subHtml += `
+            <div class="sub-card">
+              <span class="tag">${post.category.replace('_', ' ')}</span>
+              <h3 class="sub-card-title"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
+              <p class="sub-card-excerpt">${post.excerpt}</p>
+            </div>
+          `;
+        });
+        document.getElementById("sub-features-block").innerHTML = subHtml;
+
+        let trendingPosts = [...allPosts].sort(() => 0.5 - Math.random()).slice(0, 5);
+        let trendHtml = "";
+        trendingPosts.forEach((post, index) => {
+          trendHtml += `
+            <div class="trending-row">
+              <div class="trending-num">0${index+1}</div>
+              <div>
+                <span class="tag">${post.category.replace('_', ' ')}</span>
+                <h4 class="trending-text"><a onclick="readArticle('${post.id}')">${post.title}</a></h4>
+              </div>
+            </div>
+          `;
+        });
+        document.getElementById("trending-block").innerHTML = trendHtml;
+
+        const categories = ['TRUE_CRIME', 'WEIRD_HISTORY', 'POP_CULTURE', 'WHAT_IF', 'PSYCHOLOGY'];
+        let rowsHtml = "";
+
+        categories.forEach(cat => {
+          const catPosts = allPosts.filter(p => p.category === cat).slice(0, 4);
+          if(catPosts.length > 0) {
+            rowsHtml += `
+              <div class="category-row-block">
+                <div class="row-block-header">
+                  <h2>${cat.replace('_', ' ')}</h2>
+                  <a style="font-size:11px; font-weight:700; text-transform:uppercase;" onclick="loadCategoryView('${cat}')">See All →</a>
+                </div>
+                <div class="row-grid">
+            `;
+            
+            catPosts.forEach(post => {
+              const cardImg = post.thumb ? `<img src="${post.thumb}" onclick="readArticle('${post.id}')">` : `<div style="background:#f5f5f5;height:140px;"></div>`;
+              rowsHtml += `
+                <div class="grid-card">
+                  ${cardImg}
+                  <h3 class="grid-card-title"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
+                </div>
+              `;
+            });
+
+            rowsHtml += `</div></div>`;
+          }
+        });
+        document.getElementById("category-rows-container").innerHTML = rowsHtml;
+      }
+
+      function loadCategoryView(catName) {
+        document.getElementById("article-view").classList.add("hidden");
+        document.getElementById("home-view").classList.remove("hidden");
+        window.scrollTo(0, 0);
+
+        const filtered = allPosts.filter(p => p.category === catName);
+        document.getElementById("hero-block").innerHTML = `<span class="panel-section-title" style="font-size:24px; margin-bottom:20px; display:block;">Archive: ${catName.replace('_', ' ')}</span>`;
+        document.getElementById("trending-block").innerHTML = "";
+        
+        let listHtml = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; grid-column: span 3;">';
+        if(filtered.length === 0) {
+          listHtml += "<p>No articles found in this category yet.</p>";
+        } else {
+          filtered.forEach(post => {
+            const img = post.thumb ? `<img src="${post.thumb}" style="width:100%; height:200px; object-fit:cover; margin-bottom:10px;" onclick="readArticle('${post.id}')">` : "";
+            listHtml += `
+              <div style="border-bottom:1px solid #eee; padding-bottom:20px;">
+                ${img}
+                <h3 class="sub-card-title" style="font-size:22px;"><a onclick="readArticle('${post.id}')">${post.title}</a></h3>
+                <p class="sub-card-excerpt">${post.excerpt}</p>
+              </div>
+            `;
+          });
+        }
+        listHtml += '</div>';
+        document.getElementById("sub-features-block").innerHTML = listHtml;
+        document.getElementById("category-rows-container").innerHTML = "";
+      }
+
+      async function loadDataFromSupabase() {
+        try {
+          const { data: rows, error } = await supabaseClient.from('post').select('*');
           if (error) throw error;
 
-          // Dùng Index làm ID tạm để click được vào bài
           allPosts = rows.map((row, index) => {
             return {
               id: index, 
-              title: row.title || "Bài viết không tên",
+              title: row.title || "Untitled",
               author: row.author || "Lê Duy Bách",
-              date: "Mới đây", 
               excerpt: extractTextFromHTML(row.content),
               content: row.content || "",
-              category: (row.category || "TECH").toUpperCase(), 
-              thumb: row.image_url || ""
+              category: (row.category || "TRUE_CRIME").toUpperCase(), 
+              thumb: row.image_url || "",
+              affiliate_url: row.affiliate_url || ""
             };
           });
 
-          // Lật ngược danh sách thủ công (BÀI MỚI LÊN ĐẦU)
           allPosts.reverse();
+          renderGlobalMagazineLayout();
 
-          if (categoryFilter === 'ALL') {
-              document.getElementById("main-category-title").innerText = "LATEST NEWS";
-          } else {
-              document.getElementById("main-category-title").innerText = categoryFilter.replace('_', ' ');
-              
-              const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-              window.history.pushState({path:cleanUrl},'',cleanUrl);
-          }
-
-          document.getElementById("article-view").classList.add("hidden");
-          document.getElementById("home-view").classList.remove("hidden");
-          window.scrollTo(0, 0);
-
-          const container = document.getElementById("post-list-container");
-          container.innerHTML = "";
-
-          let postsToDisplay = allPosts;
-          if (categoryFilter !== 'ALL') {
-              postsToDisplay = allPosts.filter(post => post.category === categoryFilter);
-          }
-
-          if (postsToDisplay.length === 0) {
-              container.innerHTML = "<p>Chưa có bài viết nào trong chuyên mục này.</p>";
-              return;
-          }
-
-          postsToDisplay.forEach((item) => {
-            const imgTag = item.thumb ? `<img src="${item.thumb}" style="width:100%; max-height:350px; object-fit:cover; border-radius:8px; margin-bottom:15px; cursor:pointer;" onclick="readArticle('${item.id}')">` : "";
-
-            container.innerHTML += `
-              <article class="post">
-                ${imgTag}
-                <h2 class="post-title" onclick="readArticle('${item.id}')">${item.title}</h2>
-                <div class="post-meta">${item.author} · ${item.date} · Category: ${item.category.replace('_', ' ')}</div>
-                <div class="post-excerpt">${item.excerpt}</div>
-                <a class="continue-reading" onclick="readArticle('${item.id}')">Continue reading ${item.title}...</a>
-              </article>
-            `;
-          });
-        } catch (err) {
-          console.log("Lỗi tải trang: ", err);
-          document.getElementById("post-list-container").innerHTML =
-            "<p>Hệ thống đang bảo trì, vui lòng quay lại sau.</p>";
-        }
-      }
-
-      async function initApp() {
-          await loadPostList('ALL'); 
-          
           const urlParams = new URLSearchParams(window.location.search);
           const postId = urlParams.get('id');
-          
           if (postId !== null) {
               readArticle(postId); 
           }
+        } catch (err) {
+          console.error("System error:", err);
+        }
       }
 
-      initApp();
+      loadDataFromSupabase();
     </script>
 
-    <script>
-    (function(sjf){
-    var d = document,
-        s = d.createElement('script'),
-        l = d.scripts[d.scripts.length - 1];
-    s.settings = sjf || {};
-    s.src = "\/\/unequaledwinter.com\/ctDZ9M6.bx2v5ylcS\/W\/Qe9GNBzQAuxuNCz-IJzWM\/yx0c3IMBDnEL3QMPjrM\/3C";
-    s.async = true;
-    s.referrerPolicy = 'no-referrer-when-downgrade';
-    l.parentNode.insertBefore(s, l);
-    })({})
-    </script>
+    <!-- ADSTERRA POPUNDER CODE RUNNING IN BACKGROUND (HILLTOPADS REMOVED) -->
+    <script type='text/javascript' src='//www.highperformanceformat.com/29/71/62/29716205.js'></script>
   </body>
 </html>
