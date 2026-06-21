@@ -1,99 +1,112 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Đăng bài chuyên nghiệp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsroom Studio - Global Publisher Engine</title>
+    
+    <!-- Quill Rich Text Editor Style -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 30px auto; padding: 20px; background: #f0f2f5; }
-        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        /* Thêm select vào phần CSS để ô chọn chuyên mục đẹp như các ô khác */
-        input, textarea, select, button { width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
-        button { background: #24b47e; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button:disabled { background: #ccc; }
-        label { font-weight: bold; display: block; margin-top: 15px; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 30px; }
+        .admin-box { max-width: 850px; margin: 0 auto; background: white; padding: 35px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; font-weight: 700; color: #111; border-bottom: 2px solid #eee; padding-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
+        .editor-wrapper { background: #fff; border-radius: 4px; margin-bottom: 20px; }
+        #editor-container { height: 400px; font-size: 16px; }
+        button { background: #111; color: white; border: none; padding: 15px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
+        button:hover { background: #333; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>VIẾT BÀI MỚI</h2>
-        <input type="text" id="title" placeholder="Tiêu đề bài viết">
-        <textarea id="content" rows="10" placeholder="Nội dung bài viết..."></textarea>
-        
-        <!-- ĐÃ ĐỒNG BỘ 5 CHUYÊN MỤC MỚI -->
-        <label>Chọn chuyên mục:</label>
-        <select id="category">
-            <option value="TRUE_CRIME">True Crime</option>
-            <option value="WEIRD_HISTORY">Weird History</option>
-            <option value="POP_CULTURE">Pop Culture</option>
-            <option value="WHAT_IF">What If</option>
-            <option value="PSYCHOLOGY">Psychology</option>
-        </select>
 
-        <label>Chọn ảnh đại diện:</label>
-        <input type="file" id="fileInput" accept="image/*">
-        
-        <button id="submitBtn" onclick="handlePublish()">XUẤT BẢN NGAY</button>
+<div class="admin-box">
+    <h2>Global Newsroom Editor</h2>
+    
+    <div class="form-group">
+        <label>Headline (Tiêu đề bài viết - Giật gân, cuốn hút)</label>
+        <input type="text" id="post-title" placeholder="e.g., Inside the Secret Tech Race Shaping the Next Decade...">
+    </div>
+    
+    <div class="form-group">
+        <label>Cover Image URL (Link hình ảnh đại diện hiển thị ngoài trang chủ)</label>
+        <input type="text" id="post-image" placeholder="https://images.unsplash.com/... hoặc link ảnh bất kỳ">
     </div>
 
-    <script>
-        const SB_URL = "https://rcetkkjqllurishhgzfc.supabase.co";
-        const SB_KEY = "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m";
-        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    <div class="form-group">
+        <label>Target Affiliate URL (Bẫy Link tiếp thị liên kết riêng cho bài này)</label>
+        <input type="text" id="post-affiliate" placeholder="https://s.shopee.vn/..." value="https://s.shopee.vn/1gG0ShTYxL">
+    </div>
 
-        async function handlePublish() {
-            const title = document.getElementById('title').value;
-            const content = document.getElementById('content').value;
-            // Lấy giá trị chuyên mục từ ô chọn
-            const categoryValue = document.getElementById('category').value;
-            const file = document.getElementById('fileInput').files[0];
-            const btn = document.getElementById('submitBtn');
+    <div class="form-group">
+        <label>Article Content (Nội dung bài viết - Hỗ trợ dán văn bản từ AI, chỉnh đậm nhạt, chèn link)</label>
+        <div class="editor-wrapper">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+    
+    <button onclick="publishToGlobalStream()">Publish to Global Stream</button>
+</div>
 
-            if (!title || !content || !file) return alert("Bách ơi, điền đủ Title, Content và chọn Ảnh nhé!");
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+    var quill = new Quill('#editor-container', {
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link', 'image'],
+                ['clean']
+            ]
+        },
+        theme: 'snow'
+    });
 
-            btn.disabled = true;
-            btn.innerText = "Đang tải ảnh lên...";
+    const SB_URL = "https://rcetkkjqllurishhgzfc.supabase.co";
+    const SB_KEY = "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m";
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-            try {
-                // 1. Tải ảnh lên Storage
-                const fileName = Date.now() + "_" + file.name;
-                const { data: uploadData, error: uploadError } = await supabaseClient
-                    .storage
-                    .from('images') 
-                    .upload(fileName, file);
+    async function publishToGlobalStream() {
+        const title = document.getElementById("post-title").value;
+        const image_url = document.getElementById("post-image").value;
+        const affiliate_url = document.getElementById("post-affiliate").value;
+        const content = quill.root.innerHTML;
 
-                if (uploadError) throw uploadError;
-
-                // 2. Lấy link ảnh Public
-                const { data: { publicUrl } } = supabaseClient
-                    .storage
-                    .from('images')
-                    .getPublicUrl(fileName);
-
-                // 3. Lưu thông tin vào bảng Post
-                btn.innerText = "Đang lưu bài viết...";
-                const { error: insertError } = await supabaseClient
-                    .from('post')
-                    .insert([{ 
-                        title, 
-                        content, 
-                        image_url: publicUrl, 
-                        author: 'Lê Duy Bách',
-                        // Gửi biến categoryValue lên Supabase
-                        category: categoryValue
-                    }]);
-
-                if (insertError) throw insertError;
-
-                alert("Đăng bài thành công rực rỡ!");
-                location.reload();
-
-            } catch (err) {
-                alert("Lỗi: " + err.message);
-                btn.disabled = false;
-                btn.innerText = "XUẤT BẢN NGAY";
-            }
+        if(!title || !content) {
+            alert("Vui lòng nhập tiêu đề và nội dung bài viết!");
+            return;
         }
-    </script>
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('post')
+                .insert([
+                    { 
+                        title: title, 
+                        image_url: image_url, 
+                        content: content,
+                        author: "Lê Duy Bách",
+                        affiliate_url: affiliate_url,
+                        category: "NEWS" // Đưa về dòng chảy tin tức chung
+                    }
+                ]);
+
+            if (error) throw error;
+            
+            alert("Đã xuất bản thành công lên dòng chảy tin tức toàn cầu!");
+            document.getElementById("post-title").value = "";
+            document.getElementById("post-image").value = "";
+            quill.setContents([]);
+        } catch (err) {
+            alert("Lỗi kết nối cơ sở dữ liệu: " + err.message);
+        }
+    }
+</script>
 </body>
 </html>
