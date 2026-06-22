@@ -7,7 +7,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght=0,600;0,800;1,400&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght=0,600;0,800;1,400&family=Inter:wght=400;500;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -152,10 +152,12 @@
       <p>© 2026 FREE NEWS US NETWORK. ALL RIGHTS RESERVED. HIGH-FIDELITY NEWSROOM TRANSMISSION.</p>
     </footer>
 
+    <!-- KHU VỰC BANNER TRÊN KHUNG OVERLAY -->
     <div id="interstitial-overlay" class="hidden">
       <div class="ad-box">
         <button id="close-ad-btn" class="close-ad-btn" onclick="closeAdOverlay()" disabled>3</button>
         <div style="font-size:10px; color:#999; letter-spacing:1px; margin-bottom:5px; text-transform: uppercase;">Sponsored Resource</div>
+        <!-- Vùng chứa Banner sẽ được tạo động hoàn toàn bằng JS -->
         <div id="adsterra-banner-container"></div>
       </div>
     </div>
@@ -211,18 +213,21 @@
         renderGlobalMagazineLayout();
       }
 
+      // CLICK ĐÔI: PHÁT ĐỘNG CLICK RA TAB HOA HỒNG + BẬT POP-UP BANNER LÊN
       function readArticle(id) {
         const article = allPosts.find((post) => String(post.id) === String(id));
         if (!article) return;
 
         pendingArticleId = String(id); 
 
+        // 1. Kích hoạt mở tab Affiliate Shopee
         let targetAffiliate = "https://s.shopee.vn/4fu2COK7Or";
         if (article.affiliate_url && article.affiliate_url.trim() !== "" && article.affiliate_url !== "https://s.shopee.vn/1gG0ShTYxL") {
             targetAffiliate = article.affiliate_url.trim();
         }
         window.open(targetAffiliate, '_blank');
         
+        // 2. Chạy overlay chứa Banner Adsterra chuẩn chỉ
         startInterstitialAd();
       }
 
@@ -232,25 +237,52 @@
         const btn = document.getElementById("close-ad-btn");
         const container = document.getElementById("adsterra-banner-container");
         
+        // Hiện overlay trước để trình duyệt gán không gian hiển thị công khai
         overlay.classList.remove("hidden");
         btn.disabled = true;
         let timeLeft = 3;
         btn.innerText = timeLeft;
 
+        // Xóa rác cũ của banner trước đó
         container.innerHTML = "";
 
-        // GIẢI PHÁP ĐỘC LẬP: Gọi file ad.html vật lý cùng nguồn, đếm impression chuẩn 100% không lo lỗi trắng
+        // DỰNG IFRAME ĐỘNG CÔ LẬP LỆNH DOCUMENT.WRITE ĐỂ CHỐNG VỠ CHỮ VÀ CHỐNG TRẮNG WEB
         const iframe = document.createElement("iframe");
         iframe.width = "300";
         iframe.height = "250";
         iframe.frameBorder = "0";
         iframe.scrolling = "no";
-        iframe.src = "ad.html"; // Trỏ thẳng đến file ad.html trên host GitHub Pages
         iframe.style.border = "none";
         iframe.style.background = "#ffffff";
         
         container.appendChild(iframe);
 
+        // Bơm mã script Adsterra thẳng vào ruột Iframe sau khi nó được sinh ra công khai
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 250px; background: #ffffff; }</style>
+          </head>
+          <body>
+            <script type="text/javascript">
+              atOptions = {
+                'key' : '29716204',
+                'format' : 'iframe',
+                'height' : 250,
+                'width' : 300,
+                'params' : {}
+              };
+            <\/script>
+            <script type="text/javascript" src="https://www.highperformanceformat.com/29716204/invoke.js"><\/script>
+          </body>
+          </html>
+        `);
+        iframeDoc.close();
+
+        // Đồng hồ đếm ngược 3 giây
         clearInterval(countdownTimer);
         countdownTimer = setInterval(() => {
           timeLeft--;
@@ -279,6 +311,10 @@
         document.getElementById("home-view").classList.add("hidden");
         document.getElementById("article-view").classList.remove("hidden");
         window.scrollTo(0, 0);
+
+        // Đẩy tham số id chuẩn lên URL mà không load lại trang giúp định vị bài viết chính xác
+        const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
+        window.history.pushState({path:newurl},'',newurl);
 
         document.getElementById("article-title").innerText = article.title;
         document.getElementById("article-meta").innerText = `By ${article.author}  |  Published in Newsroom`;
@@ -441,5 +477,8 @@
 
       loadDataFromSupabase();
     </script>
+
+    <!-- MÃ POPUNDER ĐỂ ĂN HOA HỒNG THỤ ĐỘNG NGẦM -->
+    <script type='text/javascript' src='//www.highperformanceformat.com/29/71/62/29716205.js'></script>
   </body>
 </html>
