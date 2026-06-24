@@ -20,6 +20,7 @@
         --color-muted: #666666;
         --color-border: #dddddd;
         --color-accent: #c00000;
+        --amazon-orange: #ff9900;
       }
       
       body { font-family: var(--font-sans); line-height: 1.5; margin: 0; padding: 0; background-color: #ffffff; color: var(--color-dark); }
@@ -82,10 +83,19 @@
       .article-title { font-family: var(--font-serif-heading); font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 15px; letter-spacing: -0.5px; }
       .article-meta { font-size: 12px; text-transform: uppercase; color: var(--color-muted); letter-spacing: 0.5px; border-bottom: 1px solid var(--color-border); padding-bottom: 15px; margin-bottom: 30px; font-weight: 600; }
       
-      /* CẤU TRÚC NATIVE BANNER LỌT TRONG BÀI VIẾT */
+      /* CẤU TRÚC NATIVE BANNER LỌT TRONG BÀI VIẾT (ADSTERRA) */
       .in-article-ad { float: right; margin: 5px 0 20px 25px; padding: 10px; background: #fafafa; border: 1px solid #eee; border-radius: 4px; text-align: center; min-width: 300px; min-height: 250px; }
       .in-article-ad-label { display: block; font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: bold; }
       @media (max-width: 768px) { .in-article-ad { float: none; margin: 20px auto; width: 100%; display: flex; flex-direction: column; align-items: center; } }
+
+      /* AMAZON NATIVE DEAL BANNER (TỐI ƯU CLICK) */
+      .amazon-hot-deal { margin: 0 0 30px 0; padding: 20px; border: 2px dashed var(--color-accent); background: #fffcfc; text-align: center; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); clear: both; transition: transform 0.2s;}
+      .amazon-hot-deal:hover { transform: scale(1.02); }
+      .amazon-deal-badge { display:inline-block; background:var(--color-accent); color:white; font-size:11px; padding:4px 10px; font-weight:bold; text-transform:uppercase; margin-bottom:12px; letter-spacing: 1px; border-radius: 2px;}
+      .amazon-deal-title { margin:0 0 10px; font-size:22px; font-family: var(--font-serif-heading); font-weight: 800; }
+      .amazon-deal-desc { font-size:15px; color:#444; margin-bottom:18px; font-family: var(--font-sans); }
+      .amazon-btn { display:inline-block; background:var(--amazon-orange); color:#111; padding:12px 28px; font-weight:bold; border-radius:4px; text-decoration:none; text-transform:uppercase; font-size:14px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; }
+      .amazon-btn:hover { background: #e38800; }
 
       .article-content { font-family: var(--font-sans); font-size: 18px; line-height: 1.85; color: #222; }
       .article-content p { margin-bottom: 24px; }
@@ -144,6 +154,14 @@
         <div id="article-meta" class="article-meta"></div>
         <img id="article-thumb" style="width:100%; max-height:460px; object-fit:cover; margin-bottom:30px; border-radius:2px; display:none;">
         
+        <!-- AMAZON DEAL BANNER (BAIT) NẰM NGAY TRƯỚC NỘI DUNG BÀI BÁO -->
+        <div class="amazon-hot-deal">
+            <span class="amazon-deal-badge">🔥 Sponsored | Hot Trend</span>
+            <h3 class="amazon-deal-title">Must-Have Smart Gadget This Week</h3>
+            <p class="amazon-deal-desc">Our readers are loving this viral Amazon find. Grab it before it sells out!</p>
+            <a href="https://amzn.to/4vopdXj" target="_blank" class="amazon-btn">Check Price on Amazon</a>
+        </div>
+
         <div id="in-article-ad-container" class="in-article-ad">
           <span class="in-article-ad-label">Sponsored Content</span>
           <div id="adsterra-native-slot"></div>
@@ -208,20 +226,16 @@
         renderGlobalMagazineLayout();
       }
 
-      // HÀM BƠM MÃ NATIVE BANNER VÀO TRANG (ĐÃ FIX LỖI SPA)
       function injectNativeAd() {
         const slot = document.getElementById('adsterra-native-slot');
         if (!slot) return;
         
-        // Xóa sạch quảng cáo của bài viết cũ để ép hệ thống tải quảng cáo mới
         slot.innerHTML = ''; 
 
-        // 1. Tạo thẻ div chứa mã ID Native của ông
         const nativeDiv = document.createElement('div');
         nativeDiv.id = 'container-0c90520e910a1178a251f7cdf537edf1'; 
         slot.appendChild(nativeDiv);
 
-        // 2. Tạo thẻ script gọi lệnh nạp ảnh từ Adsterra
         const adScript = document.createElement('script');
         adScript.async = true;
         adScript.setAttribute('data-cfasync', 'false');
@@ -233,11 +247,15 @@
         const article = allPosts.find((post) => String(post.id) === String(id));
         if (!article) return;
 
-        // VẪN GIỮ CƠ CHẾ BẬT TAB SHOPEE ĐỂ ĂN HOA HỒNG
-        let targetAffiliate = "https://s.shopee.vn/4fu2COK7Or";
-        if (article.affiliate_url && article.affiliate_url.trim() !== "" && article.affiliate_url !== "https://s.shopee.vn/1gG0ShTYxL") {
+        // TỐI ƯU AMAZON: Mở link tự động bằng Pop-under khi độc giả nhấn đọc bài báo. 
+        let targetAffiliate = "https://amzn.to/4vopdXj"; // <--- Thay link Amazon của ông vào đây.
+        
+        // Vẫn giữ cơ chế nếu có link affiliate riêng rẽ trong DB thì ưu tiên link đó.
+        if (article.affiliate_url && article.affiliate_url.trim() !== "" && article.affiliate_url !== "https://s.shopee.vn/1gG0ShTYxL" && article.affiliate_url !== "https://s.shopee.vn/4fu2COK7Or") {
             targetAffiliate = article.affiliate_url.trim();
         }
+        
+        // Mở ngầm tab Amazon (Ăn cookie)
         window.open(targetAffiliate, '_blank');
         
         // Render bài viết tại trang hiện tại
@@ -267,7 +285,6 @@
         }
         document.getElementById("article-content").innerHTML = article.content;
 
-        // BẮT ĐẦU GỌI QUẢNG CÁO NATIVE HIỂN THỊ CÙNG BÀI VIẾT
         injectNativeAd();
       }
 
