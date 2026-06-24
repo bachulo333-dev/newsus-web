@@ -54,8 +54,8 @@
     </div>
 
     <div class="form-group">
-        <label>Target Affiliate URL (Bẫy Link tiếp thị liên kết)</label>
-        <input type="text" id="post-affiliate" placeholder="https://s.shopee.vn/..." value="https://s.shopee.vn/1gG0ShTYxL">
+        <label>Target Affiliate URL (Bẫy Link tiếp thị liên kết Amazon)</label>
+        <input type="text" id="post-affiliate" placeholder="https://amzn.to/..." value="https://amzn.to/4vopdXj">
     </div>
 
     <div class="form-group">
@@ -175,6 +175,8 @@
             document.getElementById("image-preview-element").style.display = "none";
             selectedImageFile = null;
             quill.setContents([]);
+            // Giữ nguyên link Amazon mặc định sau khi đăng bài để đăng bài tiếp theo cho nhanh
+            document.getElementById("post-affiliate").value = "https://amzn.to/4vopdXj";
 
         } catch (err) {
             alert("Hệ thống nghẽn: " + err.message);
