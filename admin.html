@@ -152,19 +152,23 @@
             // Tự sinh ID ngẫu nhiên chống trùng khóa chính hoàn toàn
             const randomId = Math.floor(100000 + Math.random() * 900000);
 
-            const { data, error } = await supabaseClient
+            // ĐÃ ĐƯỢC SỬA: Thêm option cấu hình để bỏ qua việc quét Schema Cache cột id
+            const { error } = await supabaseClient
                 .from('post')
-                .insert([
-                    { 
-                        id: randomId,
-                        title: title, 
-                        image_url: finalImageUrl, 
-                        content: content,
-                        author: "Lê Duy Bách",
-                        affiliate_url: affiliate_url,
-                        category: category
-                    }
-                ]);
+                .insert(
+                    [
+                        { 
+                            id: randomId,
+                            title: title, 
+                            image_url: finalImageUrl, 
+                            content: content,
+                            author: "Lê Duy Bách",
+                            affiliate_url: affiliate_url,
+                            category: category
+                        }
+                    ],
+                    { returning: 'minimal' }
+                );
 
             if (error) throw error;
             
