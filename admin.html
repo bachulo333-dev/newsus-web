@@ -18,10 +18,13 @@
         input[type="file"] { background: #fafafa; cursor: pointer; }
         .image-preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 4px; display: none; object-fit: cover; border: 1px dashed #ccc; }
         .editor-wrapper { background: #fff; border-radius: 4px; margin-bottom: 20px; }
-        #editor-container { height: 400px; font-size: 16px; }
+        #editor-container { height: 500px; font-size: 16px; }
         button { background: #111; color: white; border: none; padding: 15px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
         button:hover { background: #333; }
         button:disabled { background: #777; cursor: not-allowed; }
+        
+        /* Chỉnh lại ảnh trong Quill cho gọn */
+        .ql-editor img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -48,7 +51,7 @@
     </div>
     
     <div class="form-group">
-        <label>Cover Image (Tải trực tiếp file ảnh từ máy)</label>
+        <label>Cover Image (Ảnh đại diện bài viết - Thumbnail)</label>
         <input type="file" id="post-image-file" accept="image/*" onchange="handleImagePreview(this)">
         <img id="image-preview-element" class="image-preview">
     </div>
@@ -59,10 +62,188 @@
     </div>
 
     <div class="form-group">
-        <label>Article Content (Nội dung bài viết)</label>
+        <label>Article Content (Nội dung - Hỗ trợ chèn ảnh trực tiếp vào bài)</label>
         <div class="editor-wrapper">
             <div id="editor-container"></div>
         </div>
+    </div>
+    
+    <button id="publish-btn" onclick="publishToGlobalStream()">Publish to Global Stream</button>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+    const SB_URL = "https://rcetkkjqllurishhgzfc.supabase.co";
+    const SB_KEY = "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m";
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+    // KỸ THUẬT: Custom Image Handler cho QuillJS
+    // Hàm này chặn việc Quill tự tạo Base64, thay vào đó tải ảnh thẳng lên Supabase
+    function imageHandler() {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (file) {
+                const publishBtn = document.getElementById("publish-btn");
+                publishBtn.innerText = "Đang tải ảnh nội dung lên server...";
+                publishBtn.disabled = true;
+
+                try {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `body-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                    
+                    const { data: uploadData, error: uploadError } = await supabaseClient
+                        .storage
+                        .from('news-images')
+                        .upload(fileName, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: publicUrlData } = supabaseClient
+                        .storage
+                        .from('news-images')
+                        .getPublicUrl(fileName);
+
+                    const imgUrl = publicUrlData.publicUrl;
+                    
+                    // Chèn link ảnh vào vị trí con trỏ chuột trong khung soạn thảo
+                    const range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, 'image', imgUrl);
+                    quill.setSelection(range.index + 1);
+                    
+                } catch (err) {
+                    alert("Lỗi tải ảnh nội dung: " + err.message);
+                } finally {
+                    publishBtn.innerText = "Publish to Global Stream";
+                    publishBtn.disabled = false;
+                }
+            }
+        };
+    }
+
+    // Khởi tạo Quill với Image Handler tùy chỉnh
+    var quill = new Quill('#editor-container', {
+        modules: {
+            toolbar: {
+                container: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    ['blockquote', 'code-block'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image'], // Đã thêm icon chèn ảnh vào toolbar
+                    ['clean']
+                ],
+                handlers: {
+                    'image': imageHandler // Gọi hàm xử lý ảnh ở trên
+                }
+            }
+        },
+        theme: 'snow'
+    });
+
+    let selectedImageFile = null;
+
+    function handleImagePreview(input) {
+        const file = input.files[0];
+        const preview = document.getElementById("image-preview-element");
+        
+        if (file) {
+            selectedImageFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            }
+            reader.readAsDataURL(file);
+        } else {
+            selectedImageFile = null;
+            preview.src = "";
+            preview.style.display = "none";
+        }
+    }
+
+    async function publishToGlobalStream() {
+        const title = document.getElementById("post-title").value;
+        const category = document.getElementById("post-category").value;
+        const affiliate_url = document.getElementById("post-affiliate").value;
+        const content = quill.root.innerHTML;
+        const publishBtn = document.getElementById("publish-btn");
+
+        if(!title || !content || content.trim() === "<p><br></p>") {
+            alert("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết!");
+            return;
+        }
+
+        try {
+            publishBtn.disabled = true;
+            publishBtn.innerText = "Uploading cover image...";
+
+            let finalImageUrl = "";
+
+            if (selectedImageFile) {
+                const fileExt = selectedImageFile.name.split('.').pop();
+                const fileName = `cover-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                
+                const { data: uploadData, error: uploadError } = await supabaseClient
+                    .storage
+                    .from('news-images')
+                    .upload(fileName, selectedImageFile);
+
+                if (uploadError) throw new Error("Lỗi tải ảnh đại diện: " + uploadError.message);
+
+                const { data: publicUrlData } = supabaseClient
+                    .storage
+                    .from('news-images')
+                    .getPublicUrl(fileName);
+
+                finalImageUrl = publicUrlData.publicUrl;
+            }
+
+            publishBtn.innerText = "Syncing database data...";
+
+            // Lệnh Insert ĐÃ TỐI ƯU: Không truyền 'id', chặn trả về dữ liệu (tránh check cache)
+            const { error } = await supabaseClient
+                .from('post')
+                .insert(
+                    [
+                        { 
+                            title: title, 
+                            image_url: finalImageUrl, 
+                            content: content,
+                            author: "Lê Duy Bách",
+                            affiliate_url: affiliate_url,
+                            category: category
+                        }
+                    ],
+                    { returning: 'minimal' }
+                );
+
+            if (error) throw error;
+            
+            alert("Xuất bản thành công tin tức lên hệ thống!");
+            
+            // Dọn dẹp form sau khi đăng xong
+            document.getElementById("post-title").value = "";
+            document.getElementById("post-image-file").value = "";
+            document.getElementById("image-preview-element").style.display = "none";
+            selectedImageFile = null;
+            quill.setContents([]);
+            document.getElementById("post-affiliate").value = "https://amzn.to/4vopdXj";
+
+        } catch (err) {
+            alert("Lỗi hệ thống: " + err.message);
+        } finally {
+            publishBtn.disabled = false;
+            publishBtn.innerText = "Publish to Global Stream";
+        }
+    }
+</script>
+</body>
+</html>        </div>
     </div>
     
     <button id="publish-btn" onclick="publishToGlobalStream()">Publish to Global Stream</button>
