@@ -139,7 +139,6 @@
     }
 
     // --- TÍNH NĂNG 2: CUSTOM HANDLER CHO ẢNH & VIDEO TRONG QUILL ---
-    // Handler tải Ảnh vào bài viết
     function imageHandler() {
         const input = document.createElement('input');
         input.setAttribute('type', 'file');
@@ -152,7 +151,6 @@
         };
     }
 
-    // Handler tải Video vào bài viết
     function videoHandler() {
         const input = document.createElement('input');
         input.setAttribute('type', 'file');
@@ -165,7 +163,7 @@
         };
     }
 
-    // Hàm chung xử lý đẩy file đa phương tiện (Ảnh/Video) lên Supabase và nhúng vào bài
+    // Hàm chung đẩy file đa phương tiện lên Supabase và nhúng vào bài
     async function uploadMediaToSupabase(file, type) {
         const publishBtn = document.getElementById("publish-btn");
         const originalText = publishBtn.innerText;
@@ -190,7 +188,6 @@
 
             const mediaUrl = publicUrlData.publicUrl;
             
-            // Chèn vào vị trí con trỏ trong khung Quill
             const range = quill.getSelection(true);
             quill.insertEmbed(range.index, type, mediaUrl);
             quill.setSelection(range.index + 1);
@@ -212,7 +209,7 @@
                     ['bold', 'italic', 'underline', 'strike'],
                     ['blockquote', 'code-block'],
                     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image', 'video'], // Đã thêm icon chèn Video
+                    ['link', 'image', 'video'],
                     ['clean']
                 ],
                 handlers: {
@@ -224,7 +221,7 @@
         theme: 'snow'
     });
 
-    // --- HÀM XUẤT BẢN BÀI VIẾT ---
+    // --- HÀM XUẤT BẢN BÀI VIẾT (ĐÃ FIX LỖI DB) ---
     async function publishToGlobalStream() {
         const title = document.getElementById("post-title").value;
         const category = document.getElementById("post-category").value;
@@ -263,14 +260,13 @@
             }
 
             publishBtn.innerText = "Syncing database data...";
-            const randomId = Math.floor(100000 + Math.random() * 900000);
 
+            // Lưu ý: Không truyền "id" vào đây nữa, để Database tự xử lý
             const { error } = await supabaseClient
                 .from('post')
                 .insert(
                     [
                         { 
-                            id: randomId,
                             title: title, 
                             image_url: finalImageUrl, 
                             content: content,
