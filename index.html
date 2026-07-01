@@ -88,14 +88,14 @@
       .in-article-ad-label { display: block; font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: bold; }
       @media (max-width: 768px) { .in-article-ad { float: none; margin: 20px auto; width: 100%; display: flex; flex-direction: column; align-items: center; } }
 
-      /* AMAZON NATIVE DEAL BANNER (TỐI ƯU CLICK) */
+      /* AMAZON / SHOPEE NATIVE DEAL BANNER (TỐI ƯU CLICK) */
       .amazon-hot-deal { margin: 0 0 30px 0; padding: 20px; border: 2px dashed var(--color-accent); background: #fffcfc; text-align: center; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); clear: both; transition: transform 0.2s;}
       .amazon-hot-deal:hover { transform: scale(1.02); }
       .amazon-deal-badge { display:inline-block; background:var(--color-accent); color:white; font-size:11px; padding:4px 10px; font-weight:bold; text-transform:uppercase; margin-bottom:12px; letter-spacing: 1px; border-radius: 2px;}
       .amazon-deal-title { margin:0 0 10px; font-size:22px; font-family: var(--font-serif-heading); font-weight: 800; }
       .amazon-deal-desc { font-size:15px; color:#444; margin-bottom:18px; font-family: var(--font-sans); }
       .amazon-btn { display:inline-block; background:var(--amazon-orange); color:#111; padding:12px 28px; font-weight:bold; border-radius:4px; text-decoration:none; text-transform:uppercase; font-size:14px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; }
-      .amazon-btn:hover { background: #e38800; }
+      .amazon-btn:hover { opacity: 0.9; }
 
       .article-content { font-family: var(--font-sans); font-size: 18px; line-height: 1.85; color: #222; }
       .article-content p { margin-bottom: 24px; }
@@ -155,12 +155,7 @@
         <div id="article-meta" class="article-meta"></div>
         <img id="article-thumb" style="width:100%; max-height:460px; object-fit:cover; margin-bottom:30px; border-radius:2px; display:none;">
         
-        <div class="amazon-hot-deal">
-            <span class="amazon-deal-badge">🔥 Sponsored | Hot Trend</span>
-            <h3 class="amazon-deal-title">Must-Have Smart Gadget This Week</h3>
-            <p class="amazon-deal-desc">Our readers are loving this viral Amazon find. Grab it before it sells out!</p>
-            <a href="https://amzn.to/4vopdXj" target="_blank" class="amazon-btn">Check Price on Amazon</a>
-        </div>
+        <div class="amazon-hot-deal" id="dynamic-affiliate-banner"></div>
 
         <div id="in-article-ad-container" class="in-article-ad">
           <span class="in-article-ad-label">Sponsored Content</span>
@@ -194,7 +189,6 @@
         }
         
         const t = String(title || "").toLowerCase();
-        // ĐÃ BỔ SUNG NHẬN DIỆN TIN HỌC TẬP (Toán, lý, hóa, đề thi...)
         if (t.includes("toán") || t.includes("lý") || t.includes("hóa") || t.includes("đề thi") || t.includes("học tập") || t.includes("ôn thi") || t.includes("đáp án")) return "HOCTAP";
         if (t.includes("ai") || t.includes("tech") || t.includes("apple") || t.includes("google") || t.includes("software") || t.includes("algorithm")) return "TECHNOLOGY";
         if (t.includes("market") || t.includes("stock") || t.includes("gold") || t.includes("business") || t.includes("money") || t.includes("economy") || t.includes("gout") || t.includes("disease")) return "BUSINESS";
@@ -249,12 +243,20 @@
         const article = allPosts.find((post) => String(post.id) === String(id));
         if (!article) return;
 
+        // Bẫy Link mặc định là Amazon
         let targetAffiliate = "https://amzn.to/4vopdXj"; 
         
-        if (article.affiliate_url && article.affiliate_url.trim() !== "" && article.affiliate_url !== "https://s.shopee.vn/1gG0ShTYxL" && article.affiliate_url !== "https://s.shopee.vn/4fu2COK7Or") {
+        // NẾU LÀ BÀI HỌC TẬP -> ĐỔI LINK SANG SHOPEE CHUẨN CỦA SẾP
+        if (article.category === "HOCTAP") {
+            targetAffiliate = "https://s.shopee.vn/2LWMSNakOg";
+        }
+        
+        // Ưu tiên link truyền từ hệ thống đăng bài nếu có
+        if (article.affiliate_url && article.affiliate_url.trim() !== "") {
             targetAffiliate = article.affiliate_url.trim();
         }
         
+        // Bật ngầm link Affiliate
         window.open(targetAffiliate, '_blank');
         
         executeRenderArticleContent(id);
@@ -281,6 +283,40 @@
         } else {
           thumbEl.style.display = "none";
         }
+
+        // ==========================================
+        // KHỐI CODE ĐỔI GIAO DIỆN HỘP QUẢNG CÁO THEO NGÁCH
+        // ==========================================
+        const bannerContainer = document.getElementById("dynamic-affiliate-banner");
+        
+        // Link ưu tiên cho giao diện
+        let activeLink = article.affiliate_url && article.affiliate_url.trim() !== "" 
+                         ? article.affiliate_url 
+                         : (article.category === "HOCTAP" ? "https://s.shopee.vn/2LWMSNakOg" : "https://amzn.to/4vopdXj");
+
+        if (article.category === "HOCTAP") {
+            // Render Giao diện hộp Shopee
+            bannerContainer.innerHTML = `
+                <span class="amazon-deal-badge" style="background:#ee4d2d; color:#fff;">🔥 Shopee Mall | Ưu Đãi Trợ Giá</span>
+                <h3 class="amazon-deal-title">Máy Tính Bỏ Túi Casio 880 BTG Chính Hãng</h3>
+                <p class="amazon-deal-desc">Thiết bị mang vào phòng thi cực kỳ cần thiết đang được Shopee trợ giá độc quyền. Các bạn nhanh tay mua trước khi hết Flash Sale nhé!</p>
+                <a href="${activeLink}" target="_blank" class="amazon-btn" style="background:#ee4d2d; color:#fff; border: 1px solid #d73211;">Mua trên Shopee</a>
+            `;
+            bannerContainer.style.borderColor = "#ee4d2d";
+            bannerContainer.style.backgroundColor = "#fff5f4";
+        } else {
+            // Render Giao diện hộp Amazon cho các ngách còn lại
+            bannerContainer.innerHTML = `
+                <span class="amazon-deal-badge">🔥 Sponsored | Hot Trend</span>
+                <h3 class="amazon-deal-title">Must-Have Smart Gadget This Week</h3>
+                <p class="amazon-deal-desc">Our readers are loving this viral Amazon find. Grab it before it sells out!</p>
+                <a href="${activeLink}" target="_blank" class="amazon-btn" style="background: var(--amazon-orange); color: #111; border: none;">Check Price on Amazon</a>
+            `;
+            bannerContainer.style.borderColor = "var(--color-accent)";
+            bannerContainer.style.backgroundColor = "#fffcfc";
+        }
+
+        // Render bài viết
         document.getElementById("article-content").innerHTML = article.content;
 
         injectNativeAd();
