@@ -120,6 +120,7 @@
           <li><a id="menu-TECHNOLOGY" onclick="switchCategory('TECHNOLOGY')">Technology</a></li>
           <li><a id="menu-SCIENCE" onclick="switchCategory('SCIENCE')">Science</a></li>
           <li><a id="menu-HEALTH" onclick="switchCategory('HEALTH')">Health</a></li>
+          <li><a id="menu-HOCTAP" onclick="switchCategory('HOCTAP')">Học Tập</a></li>
         </ul>
       </nav>
 
@@ -154,7 +155,6 @@
         <div id="article-meta" class="article-meta"></div>
         <img id="article-thumb" style="width:100%; max-height:460px; object-fit:cover; margin-bottom:30px; border-radius:2px; display:none;">
         
-        <!-- AMAZON DEAL BANNER (BAIT) NẰM NGAY TRƯỚC NỘI DUNG BÀI BÁO -->
         <div class="amazon-hot-deal">
             <span class="amazon-deal-badge">🔥 Sponsored | Hot Trend</span>
             <h3 class="amazon-deal-title">Must-Have Smart Gadget This Week</h3>
@@ -194,6 +194,8 @@
         }
         
         const t = String(title || "").toLowerCase();
+        // ĐÃ BỔ SUNG NHẬN DIỆN TIN HỌC TẬP (Toán, lý, hóa, đề thi...)
+        if (t.includes("toán") || t.includes("lý") || t.includes("hóa") || t.includes("đề thi") || t.includes("học tập") || t.includes("ôn thi") || t.includes("đáp án")) return "HOCTAP";
         if (t.includes("ai") || t.includes("tech") || t.includes("apple") || t.includes("google") || t.includes("software") || t.includes("algorithm")) return "TECHNOLOGY";
         if (t.includes("market") || t.includes("stock") || t.includes("gold") || t.includes("business") || t.includes("money") || t.includes("economy") || t.includes("gout") || t.includes("disease")) return "BUSINESS";
         if (t.includes("biden") || t.includes("trump") || t.includes("election") || t.includes("politics") || t.includes("government") || t.includes("riot") || t.includes("prison") || t.includes("attica")) return "POLITICS";
@@ -247,18 +249,14 @@
         const article = allPosts.find((post) => String(post.id) === String(id));
         if (!article) return;
 
-        // TỐI ƯU AMAZON: Mở link tự động bằng Pop-under khi độc giả nhấn đọc bài báo. 
-        let targetAffiliate = "https://amzn.to/4vopdXj"; // <--- Thay link Amazon của ông vào đây.
+        let targetAffiliate = "https://amzn.to/4vopdXj"; 
         
-        // Vẫn giữ cơ chế nếu có link affiliate riêng rẽ trong DB thì ưu tiên link đó.
         if (article.affiliate_url && article.affiliate_url.trim() !== "" && article.affiliate_url !== "https://s.shopee.vn/1gG0ShTYxL" && article.affiliate_url !== "https://s.shopee.vn/4fu2COK7Or") {
             targetAffiliate = article.affiliate_url.trim();
         }
         
-        // Mở ngầm tab Amazon (Ăn cookie)
         window.open(targetAffiliate, '_blank');
         
-        // Render bài viết tại trang hiện tại
         executeRenderArticleContent(id);
       }
 
