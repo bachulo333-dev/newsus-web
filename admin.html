@@ -17,18 +17,20 @@
         input[type="text"], input[type="file"], select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
         input[type="file"] { background: #fafafa; cursor: pointer; }
         
-        /* Chỉnh lại khu vực Cover Image cho trực quan việc dán ảnh */
         .cover-image-container { border: 2px dashed #ccc; padding: 15px; border-radius: 4px; text-align: center; background: #fafafa; transition: 0.3s; }
         .cover-image-container:hover { border-color: #888; }
         .image-preview { max-width: 100%; max-height: 250px; margin-top: 15px; border-radius: 4px; display: none; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         
+        /* Box tải file đính kèm riêng cho mục HỌC TẬP */
+        .doc-upload-box { background: #e8f4fd; border: 1px solid #b6d4fe; padding: 15px; border-radius: 4px; margin-top: 15px;}
+        .doc-upload-box label { color: #084298; }
+
         .editor-wrapper { background: #fff; border-radius: 4px; margin-bottom: 20px; }
         #editor-container { height: 500px; font-size: 16px; }
         button { background: #111; color: white; border: none; padding: 15px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
         button:hover { background: #333; }
         button:disabled { background: #777; cursor: not-allowed; }
         
-        /* Hiển thị video và ảnh trong Quill cho đẹp */
         .ql-editor img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; }
         .ql-editor iframe.ql-video { width: 100%; height: 400px; border-radius: 4px; margin: 10px 0; border: none; }
     </style>
@@ -40,7 +42,7 @@
     
     <div class="form-group">
         <label>Headline (Tiêu đề bài viết)</label>
-        <input type="text" id="post-title" placeholder="e.g., Inside the Secret Tech Race Shaping the Next Decade...">
+        <input type="text" id="post-title" placeholder="e.g., Đề thi thử Tốt nghiệp THPT 2026 môn Toán...">
     </div>
 
     <div class="form-group">
@@ -53,11 +55,12 @@
             <option value="TECHNOLOGY">Technology</option>
             <option value="SCIENCE">Science</option>
             <option value="HEALTH">Health</option>
+            <option value="HOCTAP" style="font-weight: bold; color: #c00000;">📚 Học Tập (Đề Toán, Lý, Hóa...)</option>
         </select>
     </div>
     
     <div class="form-group">
-        <label>Cover Image (Ảnh đại diện bài viết - Chọn file hoặc ấn Ctrl+V)</label>
+        <label>Cover Image (Ảnh đại diện - Chọn file hoặc ấn Ctrl+V)</label>
         <div class="cover-image-container">
             <input type="file" id="post-image-file" accept="image/*" onchange="handleImagePreview(this)">
             <p style="color: #666; font-size: 14px; margin: 10px 0 0 0;"><i>Mẹo: Copy ảnh trên mạng và ấn Ctrl+V vào trang này để dán nhanh!</i></p>
@@ -65,8 +68,14 @@
         </div>
     </div>
 
+    <div class="form-group doc-upload-box">
+        <label>📥 Đính kèm tệp tài liệu (Dành cho mục Học Tập)</label>
+        <p style="font-size: 12px; color: #666; margin-top: 0;">Upload file PDF, Word, Excel. Hệ thống sẽ tự tạo nút TẢI VỀ ở cuối bài viết.</p>
+        <input type="file" id="post-doc-file" onchange="handleDocSelect(this)">
+    </div>
+
     <div class="form-group">
-        <label>Target Affiliate URL (Bẫy Link tiếp thị liên kết Amazon)</label>
+        <label>Target Affiliate URL (Bẫy Link tiếp thị liên kết)</label>
         <input type="text" id="post-affiliate" placeholder="https://amzn.to/..." value="https://amzn.to/4vopdXj">
     </div>
 
@@ -85,11 +94,20 @@
     const SB_URL = "https://rcetkkjqllurishhgzfc.supabase.co";
     const SB_KEY = "sb_publishable_xgdxFxiJwuxLrGhBHPQItA_F5b3F6_m";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    
     let selectedImageFile = null;
+    let selectedDocFile = null;
 
-    // --- TÍNH NĂNG 1: DÁN ẢNH COVER BẰNG CTRL+V ---
+    // Lắng nghe chọn file đính kèm
+    function handleDocSelect(input) {
+        if(input.files && input.files[0]) {
+            selectedDocFile = input.files[0];
+        } else {
+            selectedDocFile = null;
+        }
+    }
+
     document.addEventListener('paste', function(e) {
-        // Bỏ qua nếu đang gõ chữ trong ô tiêu đề, link hoặc đang trong khung soạn thảo Quill
         if (e.target.tagName === 'INPUT' && e.target.type === 'text') return;
         if (e.target.closest('.ql-editor')) return;
 
@@ -99,12 +117,10 @@
                 const blob = items[i].getAsFile();
                 selectedImageFile = blob; 
                 
-                // Gán file dán được vào ô input cho đồng bộ
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(new File([blob], `pasted-cover-${Date.now()}.png`, { type: blob.type }));
                 document.getElementById('post-image-file').files = dataTransfer.files;
 
-                // Hiển thị ảnh
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     const preview = document.getElementById("image-preview-element");
@@ -119,7 +135,6 @@
         }
     });
 
-    // Hàm xem trước ảnh khi chọn bằng nút "Choose File"
     function handleImagePreview(input) {
         const file = input.files[0];
         const preview = document.getElementById("image-preview-element");
@@ -138,7 +153,6 @@
         }
     }
 
-    // --- TÍNH NĂNG 2: CUSTOM HANDLER CHO ẢNH & VIDEO TRONG QUILL ---
     function imageHandler() {
         const input = document.createElement('input');
         input.setAttribute('type', 'file');
@@ -163,7 +177,6 @@
         };
     }
 
-    // Hàm chung đẩy file đa phương tiện lên Supabase và nhúng vào bài
     async function uploadMediaToSupabase(file, type) {
         const publishBtn = document.getElementById("publish-btn");
         const originalText = publishBtn.innerText;
@@ -200,7 +213,6 @@
         }
     }
 
-    // --- KHỞI TẠO QUILL JS ---
     var quill = new Quill('#editor-container', {
         modules: {
             toolbar: {
@@ -221,12 +233,11 @@
         theme: 'snow'
     });
 
-    // --- HÀM XUẤT BẢN BÀI VIẾT (ĐÃ FIX LỖI DB) ---
     async function publishToGlobalStream() {
         const title = document.getElementById("post-title").value;
         const category = document.getElementById("post-category").value;
         const affiliate_url = document.getElementById("post-affiliate").value;
-        const content = quill.root.innerHTML;
+        let content = quill.root.innerHTML;
         const publishBtn = document.getElementById("publish-btn");
 
         if(!title || !content || content.trim() === "<p><br></p>") {
@@ -236,32 +247,46 @@
 
         try {
             publishBtn.disabled = true;
-            publishBtn.innerText = "Uploading cover image...";
+            publishBtn.innerText = "Đang tải dữ liệu lên hệ thống...";
 
             let finalImageUrl = "";
+            let finalDocUrl = "";
 
+            // 1. Tải ảnh đại diện
             if (selectedImageFile) {
                 const fileExt = selectedImageFile.name ? selectedImageFile.name.split('.').pop() : 'png';
                 const fileName = `cover-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                 
-                const { data: uploadData, error: uploadError } = await supabaseClient
-                    .storage
-                    .from('news-images')
-                    .upload(fileName, selectedImageFile);
-
+                const { error: uploadError } = await supabaseClient.storage.from('news-images').upload(fileName, selectedImageFile);
                 if (uploadError) throw new Error("Lỗi tải ảnh đại diện: " + uploadError.message);
 
-                const { data: publicUrlData } = supabaseClient
-                    .storage
-                    .from('news-images')
-                    .getPublicUrl(fileName);
-
+                const { data: publicUrlData } = supabaseClient.storage.from('news-images').getPublicUrl(fileName);
                 finalImageUrl = publicUrlData.publicUrl;
             }
 
-            publishBtn.innerText = "Syncing database data...";
+            // 2. Tải file tài liệu đính kèm (nếu có)
+            if (selectedDocFile) {
+                publishBtn.innerText = "Đang xử lý file đính kèm...";
+                const fileExt = selectedDocFile.name.split('.').pop();
+                const fileName = `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                
+                const { error: uploadError } = await supabaseClient.storage.from('news-images').upload(fileName, selectedDocFile);
+                if (uploadError) throw new Error("Lỗi tải tệp tài liệu: " + uploadError.message);
 
-            // Lưu ý: Không truyền "id" vào đây nữa, để Database tự xử lý
+                const { data: publicUrlData } = supabaseClient.storage.from('news-images').getPublicUrl(fileName);
+                finalDocUrl = publicUrlData.publicUrl;
+                
+                // TỰ ĐỘNG NỐI HỘP DOWNLOAD VÀO CUỐI BÀI BÁO
+                content += `
+                <div style="margin: 40px 0; padding: 25px; background: #fafafa; border-left: 5px solid #c00000; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h3 style="margin: 0 0 10px 0; font-family: 'Playfair Display', serif; color: #111;">Tài liệu đính kèm bài viết</h3>
+                    <p style="margin: 0 0 15px 0; font-size: 15px; color: #555;">Bấm vào nút bên dưới để tải tệp (${selectedDocFile.name}) về máy tính hoặc điện thoại của bạn.</p>
+                    <a href="${finalDocUrl}" target="_blank" style="display: inline-block; background: #c00000; color: #fff; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📥 Tải về máy ngay</a>
+                </div>`;
+            }
+
+            publishBtn.innerText = "Đang đồng bộ Database...";
+
             const { error } = await supabaseClient
                 .from('post')
                 .insert(
@@ -280,18 +305,19 @@
 
             if (error) throw error;
             
-            alert("Xuất bản thành công tin tức lên hệ thống!");
+            alert("✅ Đăng bài HỌC TẬP thành công!");
             
             // Reset form
             document.getElementById("post-title").value = "";
             document.getElementById("post-image-file").value = "";
+            document.getElementById("post-doc-file").value = "";
             document.getElementById("image-preview-element").style.display = "none";
             selectedImageFile = null;
+            selectedDocFile = null;
             quill.setContents([]);
-            document.getElementById("post-affiliate").value = "https://amzn.to/4vopdXj";
 
         } catch (err) {
-            alert("Hệ thống nghẽn: " + err.message);
+            alert("Lỗi hệ thống: " + err.message);
         } finally {
             publishBtn.disabled = false;
             publishBtn.innerText = "Publish to Global Stream";
